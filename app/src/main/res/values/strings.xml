@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">CatCollage</string>
+    <string name="menu_title">меню</string>
+    <string name="menu_save">сохранить</string>
+    <string name="menu_open">открыть</string>
+    <string name="menu_delete">удалить</string>
+    <string name="items_size">Items size</string>
+    <string name="border_color">Border color</string>
+</resources>
