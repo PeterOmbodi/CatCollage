@@ -24,6 +24,7 @@ public class CollageItem implements Parcelable {
 
     private String url;
 
+    private boolean loaded;
 
     public int getViewId() {
         return viewId;
@@ -81,6 +82,14 @@ public class CollageItem implements Parcelable {
         this.url = url;
     }
 
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+    public void setLoaded(boolean loaded) {
+        this.loaded = loaded;
+    }
+
     public void setParams(int posX, int posY, float itemSize, int itemColor) {
         this.posX = posX;
         this.posY = posY;
@@ -98,9 +107,12 @@ public class CollageItem implements Parcelable {
                 ", itemColor=" + itemColor +
                 ", bitmapDrawable=" + bitmapDrawable +
                 ", url='" + url + '\'' +
+                ", loaded=" + loaded +
                 '}';
     }
 
+    public CollageItem() {
+    }
 
     @Override
     public int describeContents() {
@@ -116,9 +128,7 @@ public class CollageItem implements Parcelable {
         dest.writeInt(this.itemColor);
         dest.writeParcelable((Parcelable) this.bitmapDrawable, flags);
         dest.writeString(this.url);
-    }
-
-    public CollageItem() {
+        dest.writeByte(this.loaded ? (byte) 1 : (byte) 0);
     }
 
     protected CollageItem(Parcel in) {
@@ -129,9 +139,10 @@ public class CollageItem implements Parcelable {
         this.itemColor = in.readInt();
         this.bitmapDrawable = in.readParcelable(BitmapDrawable.class.getClassLoader());
         this.url = in.readString();
+        this.loaded = in.readByte() != 0;
     }
 
-    public static final Parcelable.Creator<CollageItem> CREATOR = new Parcelable.Creator<CollageItem>() {
+    public static final Creator<CollageItem> CREATOR = new Creator<CollageItem>() {
         @Override
         public CollageItem createFromParcel(Parcel source) {
             return new CollageItem(source);

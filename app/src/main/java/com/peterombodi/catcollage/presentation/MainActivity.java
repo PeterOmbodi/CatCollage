@@ -279,9 +279,9 @@ public class MainActivity extends AppCompatActivity implements ResponseCallback 
 
         itemsQuantity = iCollageView.getItemsCount();
         if (subject == null) subject = iCollageView.getSubjectLoadImage();
-        subscription = subject.subscribe(this::progressCheck);
+        if (subscription==null || subscription.isDisposed()) subscription = subject.subscribe(this::progressCheck);
 
-        //Log.d(TAG, "---------------------- loadData: itemsCount=" + itemsQuantity);
+        Log.d(TAG, "+---- ---------------------- loadData: itemsCount=" + itemsQuantity);
 
         Observable<CatApiResponse> observableRetrofit = (Observable<CatApiResponse>)
                 downloadDataRx.getPreparedObservable(downloadDataRx.getAPI().connect("xml", itemsQuantity, "small"),
@@ -343,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements ResponseCallback 
         if (subscription != null && !subscription.isDisposed()) {
             isSubscribe = true;
             subscription.dispose();
+            Log.d(TAG, "onSaveInstanceState: +---- "+subscription.isDisposed());
         }
         outState.putBoolean(KEY_SUBSCRIBE, isSubscribe);
 
@@ -353,6 +354,7 @@ public class MainActivity extends AppCompatActivity implements ResponseCallback 
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean(KEY_SUBSCRIBE)) {
                 if (subject == null) subject = iCollageView.getSubjectLoadImage();
+                Log.d(TAG, "onRestoreInstanceState: +----");
                 subscription = subject.subscribe(this::progressCheck);
             }
         }

@@ -56,8 +56,10 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
     private static final int MIDDLE_SIZE = 2;
     private static final int BIG_SIZE = 3;
     private static final CharSequence KEY_ITEM = "KEY_ITEM";
-    private static final String KEY_SUPER_STATE = "KEY_SUPER_STATE";
-    private static final String KEY_ITEM_LIST = "KEY_ITEM_LIST";
+    private static final String TAG_SUPER_STATE = "TAG_SUPER_STATE";
+    private static final String TAG_ITEM_LIST = "TAG_ITEM_LIST";
+    private static final int KEY_URL = 1;
+    private static final int KEY_ID = 2;
 
 
     private float gridLineWidth;
@@ -260,8 +262,9 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
         ImageSwitcher imageSwitcher = (ImageSwitcher) findViewById(_item.getViewId());
         if (imageSwitcher != null) {
             imageSwitcher.setDisplayedChild(0);
+            imageSwitcher.setTag(_item.getUrl());
             Log.d(TAG, "downloadImages: x = " + _item.getPosX() + " / y = " + _item.getPosY()
-                    + " / item.getUrl() =" + _item.getUrl() + " / getChildCount() = "
+                    + " / item.getUrl() =" + imageSwitcher.getTag() + " / getChildCount()* = "
                     + imageSwitcher.getChildCount());
             //ImageView imageView = (ImageView) imageSwitcher.getChildAt(imageSwitcher.getChildCount());
             ImageView imageView = (ImageView) imageSwitcher.getChildAt(0);
@@ -274,16 +277,18 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
                         @Override
                         public void onSuccess() {
                             _item.setBitmapDrawable((BitmapDrawable) imageView.getDrawable());
+                            _item.setLoaded(true);
                             //do smth when picture is loaded successfully
-                            Log.d(TAG, "downloadImages.onSuccess: ****************************");
+                            Log.d(TAG, "downloadImages.onSuccess: **** " + _item.getUrl()+" / id = "+_item.getViewId());
                             subjectLoadImage.onNext(-1);
                         }
 
                         @Override
                         public void onError() {
                             _item.setBitmapDrawable((BitmapDrawable) imageView.getDrawable());
+                            _item.setLoaded(false);
                             //do smth when there is picture loading error
-                            Log.d(TAG, "downloadImages.onError: ***********************");
+                            Log.d(TAG, "downloadImages.onError: **** " + _item.getUrl()+" / id = "+_item.getViewId());
                             subjectLoadImage.onNext(0);
                         }
                     });
@@ -407,8 +412,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
                     + " / Size = " + item.getItemSize());
             setView(item);
         }
-        //requestLayout();
-        //invalidate();
     }
 
     private ArrayList<Point> enabledPoints(int _from, int _to) {
@@ -444,14 +447,14 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 //        imageView.setBackgroundColor(_item.getItemColor());
 //        imageView.setImageBitmap(_item.getBitmapDrawable());
 
-//        _item.setViewId(newId());
+//        _item.setViewId(getNewId());
 //        imageView.setId(_item.getViewId());
 //        imageView.setOnLongClickListener(new ViewLongClickListener());
 //        imageView.setOnDragListener(new ViewDragListener());
 //        addView(imageView);
 
 
-        _item.setViewId(newId());
+        _item.setViewId(getNewId());
 
 
         ImageSwitcher imageSwitcher = new ImageSwitcher(context);
@@ -537,7 +540,7 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
     }
 
 
-    private int newId() {
+    private int getNewId() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return generateViewId();
         } else {
@@ -565,22 +568,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
             }
         }
     }
-
-
-//    // This defines your touch listener
-//    private class ViewLongClickListener implements OnTouchListener {
-//        public boolean onTouch(View view, MotionEvent motionEvent) {
-//            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-//                ClipData data = ClipData.newPlainText("", "");
-//                DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
-//                view.startDrag(data, shadowBuilder, view, 0);
-//                view.setVisibility(View.INVISIBLE);
-//                return true;
-//            } else {
-//                return false;
-//            }
-//        }
-//    }
 
     // This defines your touch listener
     private class ViewLongClickListener implements OnLongClickListener {
@@ -624,14 +611,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
                 case DragEvent.ACTION_DRAG_EXITED:
                     mInView = false;
                     targetView.setImageDrawable(targetDrawable);
-
-
-//                    for (CollageItem item : collageItemList) {
-//                        if (item.getViewId() == targetViewId) {
-//                            targetView.setImageDrawable(item.getBitmapDrawable());
-//                            break;
-//                        }
-//                    }
                     break;
                 case DragEvent.ACTION_DROP:
 
@@ -640,22 +619,38 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
                     sourceView.setInAnimation(dropIn);
                     sourceView.setOutAnimation(dropOut);
 
-                    Drawable drawableSource = ((ImageView) sourceView.getChildAt(sourceView.getDisplayedChild())).getDrawable();
+                    Drawable sourceDrawable = ((ImageView) sourceView.getChildAt(sourceView.getDisplayedChild())).getDrawable();
 
                     targetView.setImageDrawable(targetDrawable);
-                    sourceView.setImageDrawable(drawableSource);
-
+                    sourceView.setImageDrawable(sourceDrawable);
                     sourceView.setVisibility(View.VISIBLE);
+                    String targetUrl = (String) targetView.getTag();
+                    String sourceUrl = (String) sourceView.getTag();
+//                    Log.d(TAG, "onDrag*: targetUrl = "+targetUrl+" / sourceUrl = " +sourceUrl);
+//                    int idTarget = targetView.getChildAt(0).getId();
+//                    int idSource = sourceView.getChildAt(0).getId();
+
 
                     for (CollageItem item : collageItemList) {
                         if (item.getViewId() == targetViewId) {
                             // TODO: 18.01.2017 URL!!!!!!!!!! 
-                            targetView.setImageDrawable(drawableSource);
+                            targetView.setImageDrawable(sourceDrawable);
+                            Log.d(TAG, "onDrag: targetViewId - " + item.getUrl()+" / "+sourceUrl);
+                            item.setUrl(sourceUrl);
+                            item.setBitmapDrawable((BitmapDrawable) sourceDrawable);
                         }
                         if (item.getViewId() == sourceViewId) {
                             sourceView.setImageDrawable(targetDrawable);
+                            Log.d(TAG, "onDrag: sourceViewId - " + item.getUrl()+" / "+targetUrl);
+                            item.setUrl(targetUrl);
+                            item.setBitmapDrawable((BitmapDrawable) targetDrawable);
                         }
                     }
+
+                    targetView.setId(getNewId());
+                    sourceView.setId(targetViewId);
+                    targetView.setId(sourceViewId);
+
 
                     targetView.setInAnimation(dragIn);
                     targetView.setOutAnimation(dragOut);
@@ -695,8 +690,8 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
             disposableGetImages.dispose();
 
         Bundle bundle = new Bundle();
-        bundle.putParcelable(KEY_SUPER_STATE, super.onSaveInstanceState());
-        bundle.putParcelableArrayList(KEY_ITEM_LIST, collageItemList);
+        bundle.putParcelable(TAG_SUPER_STATE, super.onSaveInstanceState());
+        bundle.putParcelableArrayList(TAG_ITEM_LIST, collageItemList);
         return bundle;
     }
 
@@ -705,39 +700,25 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
         if (state instanceof Bundle) // implicit null check
         {
             Bundle bundle = (Bundle) state;
-            collageItemList = bundle.getParcelableArrayList(KEY_ITEM_LIST);
+            collageItemList = bundle.getParcelableArrayList(TAG_ITEM_LIST);
             setAllViews(collageItemList);
 
             disposableGetImages = subjectLoadImage.subscribe(this::progressCheck);
             subjectLoadImage.onNext(collageItemList.size());
             Log.d(TAG, "+----onRestoreInstanceState:  collageItemList.size() = " + collageItemList.size());
+            // TODO: 19.01.2017 тут все грузится с космоса/кеша, а надо из массива
+            // хранить в массиве УРИ и при его наличии качать с него, иначе космос
             for (CollageItem item : collageItemList) {
-                downloadItemImage(item);
+//                if (item.isLoaded()){
+//
+//                } else {
+                    downloadItemImage(item);
+//                }
             }
-            state = bundle.getParcelable(KEY_SUPER_STATE);
+            state = bundle.getParcelable(TAG_SUPER_STATE);
         }
         super.onRestoreInstanceState(state);
     }
-
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        ArrayList<CollageItem> collageItemList = iCollageView.getItemList();
-//        outState.putParcelableArrayList(KEY_ARRAY_LIST, collageItemList);
-//    }
-//
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        if (savedInstanceState != null) {
-//            ArrayList<CollageItem> collageItemList = savedInstanceState.getParcelableArrayList(KEY_ARRAY_LIST);
-//            if (collageItemList != null) {
-//                iCollageView.setItemList(collageItemList);
-//                itemsQuantity = collageItemList.size();
-//                Log.d(TAG, "onRestoreInstanceState: collageItemList " + collageItemList.size() + " / itemsQuantity = " + itemsQuantity);
-//            }
-//        }
-//    }
 
 
 }
