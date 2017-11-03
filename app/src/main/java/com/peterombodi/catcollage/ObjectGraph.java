@@ -1,9 +1,9 @@
 package com.peterombodi.catcollage;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.peterombodi.catcollage.data.api.DownloadDataRx;
+import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.presenter.CreateCollagePresenter;
 
 /**
  * Created by Admin on 10.01.2017.
@@ -21,16 +21,21 @@ public final class ObjectGraph {
         return graph;
     }
 
-    private final DownloadDataRx downloadDataRx;
+    private final DownloadDataRx mDownloadDataRx;
+    private final CreateCollagePresenter mCreateCollagePresenter;
 
     public ObjectGraph(final Context _context){
-        downloadDataRx = new DownloadDataRx();
-        Log.d(TAG, "ObjectGraph: -----------------------------------");
+        mDownloadDataRx = new DownloadDataRx();
+        mCreateCollagePresenter = new CreateCollagePresenter();
     }
 
     public final DownloadDataRx getDownloadDataRx() {
-        Log.d(TAG, "getDownloadDataRx: ---------------------------------");
-        return downloadDataRx;
+        return mDownloadDataRx;
+    }
+
+
+    public final CreateCollagePresenter getCreateCollagePresenter(){
+        return mCreateCollagePresenter;
     }
 
 }

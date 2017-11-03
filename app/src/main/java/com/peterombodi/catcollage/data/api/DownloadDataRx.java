@@ -23,7 +23,7 @@ public class DownloadDataRx {
     private static final String PARAM_FORMAT_XML = "xml";
 
     private static Observable<CatApiResponse> observableRetrofit;
-    private LruCache<Class<?>, Observable<?>> apiObservables;
+    private LruCache<Class<CatApiResponse>, Observable<CatApiResponse>> apiObservables;
     private CatApiRestRx getData;
 
     public DownloadDataRx() {
@@ -44,20 +44,21 @@ public class DownloadDataRx {
     }
 
 
-    public Observable<?> getPreparedObservable(Observable<?> unPreparedObservable, Class<?> clazz, boolean cacheObservable, boolean useCache){
+    public Observable<CatApiResponse> getPreparedObservable(Observable<CatApiResponse> unPreparedObservable, Class<CatApiResponse> clazz, boolean cacheObservable, boolean useCache){
 
-        Observable<?> preparedObservable = null;
+        Observable<CatApiResponse> preparedObservable = null;
 
         if(useCache)//this way we don't reset anything in the cache if this is the only instance of us not wanting to use it.
-            preparedObservable = apiObservables.get(clazz);
+            preparedObservable = (Observable<CatApiResponse>) apiObservables.get(clazz);
 
         if(preparedObservable!=null)
             return preparedObservable;
 
         //we are here because we have never created this observable before or we didn't want to use the cache...
 
-        preparedObservable = unPreparedObservable.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread());
+        preparedObservable = (Observable<CatApiResponse>) unPreparedObservable
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread());
 
         if(cacheObservable){
             preparedObservable = preparedObservable.cache();

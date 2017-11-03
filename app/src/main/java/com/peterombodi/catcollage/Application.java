@@ -2,6 +2,8 @@ package com.peterombodi.catcollage;
 
 import android.content.Context;
 
+import com.raizlabs.android.dbflow.config.FlowManager;
+
 /**
  * Created by Admin on 03.01.2017.
  */
@@ -15,8 +17,10 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        instance = this;
-        ObjectGraph.getInstance(getApplicationContext());   //init ObjectGraph when application created
+        instance = getApplicationContext();
+        ObjectGraph.getInstance(instance);   //init ObjectGraph when application created
+        FlowManager.init(this);
+        //initFlowDb();
     }
 
 
@@ -24,5 +28,18 @@ public class Application extends android.app.Application {
         return instance;
     }
 
-
+//    private void initFlowDb() {
+//        DatabaseConfig.OpenHelperCreator openHelperCreator = CatCollageDatabase::new;
+//
+//        DatabaseConfig databaseConfig = new DatabaseConfig.Builder(CatCollageDatabase.class)
+//            .openHelper(openHelperCreator)
+//            .build();
+//
+//        FlowConfig flowConfig = new FlowConfig.Builder(this)
+//            .openDatabasesOnInit(true)
+//            .addDatabaseConfig(databaseConfig)
+//            .build();
+//
+//        FlowManager.init(flowConfig);
+//    }
 }

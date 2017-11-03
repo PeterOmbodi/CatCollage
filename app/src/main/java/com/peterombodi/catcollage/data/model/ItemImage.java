@@ -8,7 +8,7 @@ import org.simpleframework.xml.Root;
  */
 
 @Root(name = "image")
-public class Image {
+public class ItemImage {
     @Element(name = "url")
     private String url;
 

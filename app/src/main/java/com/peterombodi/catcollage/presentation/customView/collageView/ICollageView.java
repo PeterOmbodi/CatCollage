@@ -1,12 +1,10 @@
 package com.peterombodi.catcollage.presentation.customView.collageView;
 
-import com.peterombodi.catcollage.data.model.CollageItem;
-import com.peterombodi.catcollage.data.model.Image;
+import android.widget.ImageView;
+
+import com.peterombodi.catcollage.database.model.CollageItem;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import io.reactivex.subjects.PublishSubject;
 
 /**
  * Created by Admin on 20.12.2016.
@@ -22,12 +20,16 @@ public interface ICollageView {
 
     int getItemsCount();
 
+    int getItemsForLoadCount();
+
     ArrayList<CollageItem> getItemList();
 
     void setItemList(ArrayList<CollageItem> _items);
 
-    void downloadImages(List<Image> _images);
+    //void downloadImages(List<Image> _images);
 
-    PublishSubject<Integer> getSubjectLoadImage();
+    //PublishSubject<Integer> getSubjectLoadImage();
+
+    ImageView getCollageItemView(int _switcherId);
 
 }

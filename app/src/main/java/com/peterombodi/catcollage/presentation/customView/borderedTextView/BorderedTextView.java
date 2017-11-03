@@ -6,100 +6,76 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.widget.TextView;
 
 /**
  * Created by Admin on 16.01.2017.
  */
 
-public class BorderedTextView extends TextView {
-    private static final String TAG = "BorderedTextView";
-    private Paint paint = new Paint();
-    public static final int BORDER_TOP = 0x00000001;
-    public static final int BORDER_RIGHT = 0x00000002;
-    public static final int BORDER_BOTTOM = 0x00000004;
-    public static final int BORDER_LEFT = 0x00000008;
+public class BorderedTextView extends android.support.v7.widget.AppCompatTextView {
+	private static final String TAG = "BorderedTextView";
+	private Paint paint = new Paint();
+	public static final int BORDER_TOP = 0x00000001;
+	public static final int BORDER_RIGHT = 0x00000002;
+	public static final int BORDER_BOTTOM = 0x00000004;
+	public static final int BORDER_LEFT = 0x00000008;
 
-    //private Border[] borders;
-    private Border border;
-    private RectF rectf;
-
-
-    public BorderedTextView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init();
-    }
-
-    public BorderedTextView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public BorderedTextView(Context context) {
-        super(context);
-        init();
-    }
-
-    private void init() {
-
-//        borders = new Border[BORDER_TOP];
-
-//        Log.d(TAG, "init: borders.length = "+borders.length);
-//        Log.d(TAG, "init: borders.getStyle = "+borders[0].getStyle());
-
-        Border border = new Border(BORDER_TOP);
-        border.setColor(Color.BLUE);
-        border.setWidth(4);
+	private Border border;
+	private RectF rectf;
 
 
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setAntiAlias(true);
-//        paint.setColor(Color.BLACK);
-//        paint.setStrokeWidth(40);
+	public BorderedTextView(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		init();
+	}
 
-        rectf = new RectF(0, 0, 0, 0);
-        setBorders(border);
-    }
+	public BorderedTextView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		init();
+	}
+
+	public BorderedTextView(Context context) {
+		super(context);
+		init();
+	}
+
+	private void init() {
+
+		Border border = new Border(BORDER_TOP);
+		border.setColor(Color.BLUE);
+		border.setWidth(4);
 
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-//        Log.d(TAG, "onDraw: borders isnull = " + (border == null));
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setAntiAlias(true);
 
-        if (border == null) return;
-        paint.setColor(border.getColor());
-        paint.setStrokeWidth(border.getWidth());
+		rectf = new RectF(0, 0, 0, 0);
+		setBorders(border);
+	}
 
-        float size = (getWidth() > getHeight()) ? getWidth() : getHeight();
-        setWidth((int) size);
-        setHeight((int) size);
 
-        rectf.set(border.getWidth(), border.getWidth(), size - border.getWidth(), size - border.getWidth());
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+		if (border == null) return;
+		paint.setColor(border.getColor());
+		paint.setStrokeWidth(border.getWidth());
 
-        //rectf.set(border.getWidth(), border.getWidth(), getWidth() - border.getWidth(), getHeight() - border.getWidth());
-        canvas.drawRoundRect(rectf, 2, 2, paint);
-    }
+		float size = (getWidth() > getHeight()) ? getWidth() : getHeight() ;
+		setWidth((int) size);
+		setHeight((int) size);
 
-//    public Border[] getBorders() {
-//        return borders;
-//    }
-//
-//    public void setBorders(Border[] borders) {
-//        this.borders = borders;
-//    }
+		rectf.set(0, 0, size, size);
 
-    public Border getBorders() {
-        return border;
-    }
+		canvas.drawRoundRect(rectf, 2, 2, paint);
+	}
 
-    public void setBorders(Border border) {
-        this.border = border;
-    }
+	public Border getBorders() {
+		return border;
+	}
 
-//    public void setBorders(Border _borders, int _color, int _width) {
-//        this.border = _borders;
-//    }
+	public void setBorders(Border border) {
+		this.border = border;
+	}
 
 
 }

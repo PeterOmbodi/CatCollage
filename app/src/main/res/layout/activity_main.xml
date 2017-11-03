@@ -1,110 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
     android:layout_width="match_parent"
+    android:id="@+id/activity_main"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.peterombodi.catcollage.presentation.MainActivity">
+    android:orientation="vertical">
 
-    <include layout="@layout/toolbar">
-
-    </include>
-
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:weightSum="1">
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
 
-        <com.peterombodi.catcollage.presentation.customView.collageView.CollageView
-            android:id="@+id/cv_MA"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="20dp"
-            android:layout_weight="1"
-            android:elevation="6dp">
-
-        </com.peterombodi.catcollage.presentation.customView.collageView.CollageView>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView
-                android:id="@+id/btv1_AM"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:layout_marginTop="18dp"
-                android:gravity="center"
-                android:text="1"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/items_size" />
-
-                <SeekBar
-                    android:id="@+id/sb_items_size"
-                    style="@style/Widget.AppCompat.SeekBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:progress="1" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/border_color" />
-
-                <SeekBar
-                    android:id="@+id/sb_color"
-                    style="@style/Widget.AppCompat.SeekBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:maxHeight="4dp"
-                    android:minHeight="4dp" />
-
-            </LinearLayout>
-
-            <com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView
-                android:id="@+id/btv2_AM"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_gravity="top"
-                android:gravity="center"
-                android:textSize="20dp"
-                android:text="3"/>
-
-
-        </LinearLayout>
-
-
-    </LinearLayout>
-
-
-    <!--<android.support.percent.PercentRelativeLayout-->
-    <!--android:id="@+id/prlCollage"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content">-->
-
-    <!--</android.support.percent.PercentRelativeLayout>-->
-
+    </FrameLayout>
 
 </LinearLayout>
-
-    <!--android:progressDrawable="@drawable/sb_progress"--><!--android:progressDrawable="@android:color/transparent"-->

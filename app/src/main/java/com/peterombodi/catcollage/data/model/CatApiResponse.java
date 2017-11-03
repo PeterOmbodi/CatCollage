@@ -28,8 +28,8 @@ public class CatApiResponse {
         return data.getImages();
     }
 
-    public List<Image> getImageList() {
-        return data.getImages().getImageList();
+    public List<ItemImage> getImageList() {
+        return data.getImages().getItemImageList();
     }
 
     @Override
@@ -64,20 +64,20 @@ class ResponseData {
 @Root(name="images")
 class Images {
     @ElementList(inline = true)
-    private List<Image> imageList;
+    private List<ItemImage> itemImageList;
 
-    public List<Image> getImageList() {
-        return imageList;
+    public List<ItemImage> getItemImageList() {
+        return itemImageList;
     }
 
-    public void setImageList(List<Image> imageList) {
-        this.imageList = imageList;
+    public void setItemImageList(List<ItemImage> itemImageList) {
+        this.itemImageList = itemImageList;
     }
 
     @Override
     public String toString() {
         return "Images{" +
-                "imageList=" + imageList +
+                "imageList=" + itemImageList +
                 '}';
     }
 }
