@@ -1,4 +1,4 @@
-package com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.view;
+package com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -36,7 +36,7 @@ import com.peterombodi.catcollage.presentation.customView.borderedTextView.Borde
 import com.peterombodi.catcollage.presentation.customView.collageView.CollageView2;
 import com.peterombodi.catcollage.presentation.customView.collageView.ICollageView;
 import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.ICreateCollage;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.presenter.CreateCollagePresenter;
+import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.CreateCollagePresenter;
 
 import static com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView.BORDER_TOP;
 import static com.peterombodi.catcollage.utils.Helper.getProgressColor;

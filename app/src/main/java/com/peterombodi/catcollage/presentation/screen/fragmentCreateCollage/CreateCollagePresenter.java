@@ -1,4 +1,4 @@
-package com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.presenter;
+package com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage;
 
 import android.content.Context;
 import android.util.Log;

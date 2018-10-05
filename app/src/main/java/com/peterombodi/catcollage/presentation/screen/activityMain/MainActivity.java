@@ -1,11 +1,11 @@
-package com.peterombodi.catcollage.presentation.screen.activityMain.view;
+package com.peterombodi.catcollage.presentation.screen.activityMain;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
 import com.peterombodi.catcollage.R;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.view.CreateCollageFragment;
+import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.CreateCollageFragment;
 
 
 public class MainActivity extends AppCompatActivity {

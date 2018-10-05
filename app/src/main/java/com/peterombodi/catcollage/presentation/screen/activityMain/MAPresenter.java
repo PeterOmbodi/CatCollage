@@ -1,4 +1,4 @@
-package com.peterombodi.catcollage.presentation.screen.activityMain.presenter;
+package com.peterombodi.catcollage.presentation.screen.activityMain;
 
 import android.graphics.Color;
 import android.util.Log;

@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:fullBackupContent="true">
-        <activity android:name="com.peterombodi.catcollage.presentation.screen.activityMain.view.MainActivity">
+        <activity android:name="com.peterombodi.catcollage.presentation.screen.activityMain.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

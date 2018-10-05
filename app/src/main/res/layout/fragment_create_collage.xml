@@ -7,7 +7,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              tools:context="com.peterombodi.catcollage.presentation.screen.activityMain.view.MainActivity">
+              tools:context="com.peterombodi.catcollage.presentation.screen.activityMain.MainActivity">
 
     <include layout="@layout/toolbar">
 

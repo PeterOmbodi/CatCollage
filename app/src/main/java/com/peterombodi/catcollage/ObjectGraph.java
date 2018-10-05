@@ -3,7 +3,7 @@ package com.peterombodi.catcollage;
 import android.content.Context;
 
 import com.peterombodi.catcollage.data.api.DownloadDataRx;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.presenter.CreateCollagePresenter;
+import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.CreateCollagePresenter;
 
 /**
  * Created by Admin on 10.01.2017.
