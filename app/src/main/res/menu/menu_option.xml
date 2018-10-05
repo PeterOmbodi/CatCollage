@@ -15,7 +15,7 @@
     </item>
     <item
         android:id="@+id/action_open"
-        android:icon="@drawable/icn_folder3"
+        android:icon="@drawable/ic_folder_open_black_24dp"
         android:title="@string/menu_title"
         app:showAsAction="always">
     </item>
