@@ -8,22 +8,32 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.percent.PercentLayoutHelper;
-import android.support.percent.PercentRelativeLayout;
+import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.constraint.ConstraintSet;
+import android.support.constraint.Guideline;
+import android.support.transition.ChangeBounds;
+import android.support.transition.Fade;
+import android.support.transition.Transition;
+import android.support.transition.TransitionManager;
+import android.support.transition.TransitionSet;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.peterombodi.catcollage.R;
-import com.peterombodi.catcollage.data.api.DownloadImage;
 import com.peterombodi.catcollage.database.model.CollageItem;
+import com.peterombodi.catcollage.presentation.customView.FadeInterpolator;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -34,38 +44,35 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
+import static android.support.constraint.ConstraintSet.HORIZONTAL;
+import static android.support.constraint.ConstraintSet.VERTICAL;
 import static com.peterombodi.catcollage.constants.Constants.STATUS_DOWNLOAD_OK;
 
 /**
- * Created by Admin on 15.12.2016.
+ * Created by Peter on 02.10.2017.
  */
 
-public class CollageView extends PercentRelativeLayout implements ICollageView {
+public class CollageView extends ConstraintLayout implements ICollageView {
 
 	private static final String TAG = "CollageView";
 	public static final int maxDensity = 11;
 	private static final int SMALL_SIZE = 1;
 	private static final int MIDDLE_SIZE = 2;
 	private static final int BIG_SIZE = 3;
-	private static final CharSequence KEY_ITEM = "KEY_ITEM";
 	private static final String TAG_SUPER_STATE = "TAG_SUPER_STATE";
-	private static final String TAG_ITEM_LIST = "TAG_ITEM_LIST";
 	private static final String TAG_DRAG_ENABLED = "TAG_DRAG_ENABLED";
 
 
 	private float gridLineWidth;
-	private float sizeSquareSmall;
-	private float sizeSquareMiddle;
-	private float sizeSquareBig;
+	private int gridLineWidthDp;
 
 	private Context context;
-	private PercentRelativeLayout percentRelativeLayout;
 
-	private Disposable disposableSetCollage;
-//    private PublishSubject<Integer> subjectLoadImage;
+	private ConstraintLayout constraintLayout;
 
-//    private DownloadImage downloadImage;
+	private Disposable disposableTransition;
 
 	private boolean mInView = false;
 	private BitmapDrawable targetDrawable;
@@ -73,11 +80,9 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 	private int sourceViewId;
 	private ImageSwitcher sourceView;
 	private ImageSwitcher targetView;
-
+	private int collageViewSize;
 
 	private int itemsCount;
-	private int itemsForLoad;
-	private int itemsLoaded;
 
 	private ArrayList<CollageItem> collageItemList;
 	private boolean dragEnabled;
@@ -87,7 +92,9 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 	private Animation dropIn;
 	private Animation dropOut;
 
-	private DownloadImage downloadImage;
+	private int[][] guidelines;
+
+	private PublishSubject<Integer> subjectSetCollage;
 
 
 	public CollageView(Context context) throws InterruptedException {
@@ -112,15 +119,15 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		int viewHeight = h;
 		int viewWidth = w;
 		float squareSize = ((viewHeight > viewWidth) ? viewWidth : viewHeight);
-		int newSize = (int) (squareSize);
-
-		Log.d(TAG, "onSizeChanged: __________________ newSize = " + newSize);
-		if (newSize != 0) {
-			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(newSize, newSize);
-			// TODO: 11.01.2017 привязка к конкретной реализации!!!!
-			percentRelativeLayout = (PercentRelativeLayout) findViewById(R.id.cv_MA);
-			percentRelativeLayout.setLayoutParams(params);
-			//percentRelativeLayout.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+		collageViewSize = (int) (squareSize);
+		gridLineWidthDp = (int) (squareSize * gridLineWidth);
+		Log.d(TAG, "onSizeChanged: __________________ newSize = " + collageViewSize + " / gridLineWidthDp = " + gridLineWidthDp);
+		if (collageViewSize != 0) {
+			ViewGroup.LayoutParams params = constraintLayout.getLayoutParams();
+			params.height = collageViewSize;
+			params.width = collageViewSize;
+			constraintLayout.setVisibility(VISIBLE);
+			constraintLayout.setLayoutParams(params);
 			requestLayout();
 			if (collageItemList != null) {
 				Log.d(TAG, "onSizeChanged: collageItemList" + collageItemList.size());
@@ -128,61 +135,43 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 			}
 		}
 
-		//Log.d(TAG, "onSizeChanged: percentRelativeLayout"+percentRelativeLayout.getRootView().getClass().getName());
+
 	}
 
 
 	private void init(Context _context) throws InterruptedException {
 		context = _context;
 		Log.d(TAG, "init: --------------------------------");
+		constraintLayout = this;
 		itemsCount = 0;
-
 		gridLineWidth = 0.01f;
-		sizeSquareSmall = (1 - gridLineWidth * 10) / 9;
-		sizeSquareMiddle = (1 - gridLineWidth * 6) / 4.5f;
-		sizeSquareBig = (1 - gridLineWidth * 4) / 3;
-
+		gridLineWidthDp = 4;
 
 		if (!this.isInEditMode()) {
-			if (collageItemList == null || collageItemList.size() == 0) {
-				Log.d(TAG, "init: --------------------------------");
-				//setCollage(2);
-			}
-
 			// animation drag on view
 			dragIn = new AlphaAnimation(0, 1);
-			dragIn.setDuration(200);
+			dragIn.setDuration(1500);
 			dragOut = new AlphaAnimation(1, 0);
-			dragOut.setDuration(200);
-
+			dragOut.setDuration(1500);
 			// animation drop on view
 			dropIn = AnimationUtils.loadAnimation(context, R.anim.left_to_right_in);
 			dropOut = AnimationUtils.loadAnimation(context, R.anim.left_to_right_out);
-
-			//subjectLoadImage = PublishSubject.create();
-
-			downloadImage = new DownloadImage(context);
-//            subjectLoadImage = downloadImage.getPublishSubject();
-
 		} else {
 			ArrayList<CollageItem> itemArrayList = getNewCollageList(10);
 			setAllViews(itemArrayList);
 		}
-
-	}
-
-	@Override
-	public void setCollage(int _density) {
-
-		if (disposableSetCollage != null && !disposableSetCollage.isDisposed()) {
-			disposableSetCollage.dispose();
-		}
-		disposableSetCollage = Observable.just(_density)
-			.debounce(300, TimeUnit.MILLISECONDS)
+		subjectSetCollage = PublishSubject.create();
+		subjectSetCollage
+			.debounce(200, TimeUnit.MILLISECONDS)
 			.map(this::getNewCollageList)
 			.subscribeOn(Schedulers.newThread())
 			.observeOn(AndroidSchedulers.mainThread())
 			.subscribe(this::setAllViews);
+	}
+
+	@Override
+	public void setCollage(int _density) {
+		subjectSetCollage.onNext(_density);
 	}
 
 
@@ -193,7 +182,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 
 	@Override
 	public void setDragEnabled(boolean _enabled) {
-		Log.d(TAG, "setDragEnabled: +++++++++++++++++++++++++++ " + _enabled);
 		dragEnabled = _enabled;
 	}
 
@@ -233,65 +221,87 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		return null;
 	}
 
-//    @Override
-//    public void downloadImages(List<Image> _images) {
-//
-//        int i = 0;
-////        subjectLoadImage.onNext(collageItemList.size());
-//        for (CollageItem item : collageItemList) {
-//            item.setUrl(_images.get(i).getUrl());
-//            i++;
-//            downloadItemImage(item);
-//        }
-//    }
+	private void newGuidelines() {
+		guidelines = new int[2][10];
+		ConstraintSet constraintSet = new ConstraintSet();
+		constraintSet.clone(constraintLayout);
+		for (int i = 0; i < 10; i++) {
+			addGuideline(constraintSet, VERTICAL, i);
+			addGuideline(constraintSet, HORIZONTAL, i);
+		}
+		constraintSet.applyTo(constraintLayout);
+	}
 
-//    private void downloadItemImage(CollageItem _item) {
-//        ImageSwitcher imageSwitcher = (ImageSwitcher) findViewById(_item.getViewId());
-//        if (imageSwitcher != null) {
-//            imageSwitcher.setDisplayedChild(0);
-//            imageSwitcher.setTag(_item.getUrl());
-//            Log.d(TAG, "downloadImages: x = " + _item.getPosX() + " / y = " + _item.getPosY()
-//                    + " / item.getUrl() =" + imageSwitcher.getTag() + " / getChildCount()* = "
-//                    + imageSwitcher.getChildCount());
-//            ImageView imageView = (ImageView) imageSwitcher.getChildAt(0);
-//            downloadImage.downloadImage(imageView,_item.getUrl());
-//        } else {
-//            Log.d(TAG, "downloadImages: imageSwitcher = null");
-//        }
-//    }
+	private void addGuideline(ConstraintSet constraintSet, int orientation, int i) {
+		Guideline guideLine = new Guideline(context);
+		guideLine.setId(getNewId());
+		constraintLayout.addView(guideLine);
+		constraintSet.create(guideLine.getId(), orientation);
+		//constraintSet.setGuidelinePercent(guideLine.getId(), ((1f - gridLineWidth) / 9f) * i + gridLineWidth);
+		constraintSet.setGuidelinePercent(guideLine.getId(), gridLineWidth);
+		guidelines[orientation][i] = guideLine.getId();
+	}
+
+	private void decreaseGuidelines(ArrayList<CollageItem> _collageItems) {
+		ConstraintSet constraintSet = new ConstraintSet();
+		constraintSet.clone(constraintLayout);
+
+		TransitionSet set = new TransitionSet();
+		Fade fade = new Fade();
+//		fade.setDuration(500);
+		fade.setInterpolator(new FadeInterpolator());
+		set.addTransition(fade);
+
+		ChangeBounds changeBounds = new ChangeBounds();
+//		changeBounds.setStartDelay(100);
+		set.addTransition(changeBounds);
+
+		set.setOrdering(TransitionSet.ORDERING_TOGETHER);
+		set.addListener(new DecreaseTransitionListener(_collageItems, constraintSet));
+		set.setDuration(200);
+		set.setInterpolator(new LinearOutSlowInInterpolator());
+		TransitionManager.beginDelayedTransition(constraintLayout, set);
+
+		for (int i = 0; i < 10; i++) {
+			constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], 0.25f + i * gridLineWidth * 5);
+			constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], 0.25f + i * gridLineWidth * 5);
+		}
+
+		if (collageItemList != null)
+			constraintLayout.setVisibility(INVISIBLE);
+		constraintSet.applyTo(constraintLayout);
+	}
 
 
-//    public PublishSubject<Integer> getSubjectLoadImage() {
-//        return subjectLoadImage;
-//    }
+	private void increaseGuidelines(ArrayList<CollageItem> _collageItems) {
+		ConstraintSet constraintSet = new ConstraintSet();
+		constraintSet.clone(constraintLayout);
+		TransitionSet set1 = new TransitionSet();
 
+		Fade fade = new Fade();
+		fade.setDuration(100);
+		set1.addTransition(fade);
 
-//    public class CropSquareTransformation implements Transformation {
-//        @Override
-//        public Bitmap transform(Bitmap source) {
-//            int size = Math.min(source.getWidth(), source.getHeight());
-//            int x = (source.getWidth() - size) / 2;
-//            int y = (source.getHeight() - size) / 2;
-//            Bitmap result = Bitmap.createBitmap(source, x, y, size, size);
-//            if (result != source) {
-//                source.recycle();
-//            }
-//            return result;
-//        }
-//
-//        @Override
-//        public String key() {
-//            return "square()";
-//        }
-//    }
+		set1.addTransition(new ChangeBounds());
+
+		set1.setOrdering(TransitionSet.ORDERING_TOGETHER);
+		set1.addListener(new IncreaseTransitionListener(_collageItems));
+		set1.setDuration(100);
+
+		set1.setInterpolator(new AccelerateInterpolator());
+
+		TransitionManager.beginDelayedTransition(constraintLayout, set1);
+		constraintLayout.setVisibility(VISIBLE);
+		for (int i = 0; i < 10; i++) {
+			float percent = ((1f - gridLineWidth) / 9f) * i + gridLineWidth;
+			constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], percent);
+			constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], percent);
+		}
+		constraintSet.applyTo(constraintLayout);
+	}
+
 
 	private ArrayList<CollageItem> getNewCollageList(int _density) throws InterruptedException {
-		Log.d(TAG, "getNewCollageList: _density = " + _density);
-//        TimeUnit.SECONDS.sleep(3);
-
-//        enabledPointsSmall = enabledPoints(0, 9);
-//        enabledPointsMiddle = enabledPoints(0, 8);
-//        enabledPointsBig = enabledPoints(0, 7);
 
 		ArrayList<ArrayList<Point>> enabledPoints = new ArrayList<>();
 		enabledPoints.add(enabledPoints(0, 9));
@@ -341,38 +351,40 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 					break;
 			}
 			for (int i = 1; i <= cntSize3; i++)
-				addItem(collageItems, BIG_SIZE, enabledPoints, sizeSquareBig, getResources().getColor(android.R.color.holo_blue_bright));
+				addItem(collageItems, BIG_SIZE, enabledPoints, ContextCompat.getColor(context, android.R.color.holo_blue_bright));
 			for (int i = 1; i <= cntSize2; i++)
-				addItem(collageItems, MIDDLE_SIZE, enabledPoints, sizeSquareMiddle, getResources().getColor(android.R.color.holo_blue_light));
+				addItem(collageItems, MIDDLE_SIZE, enabledPoints, ContextCompat.getColor(context, android.R.color.holo_blue_light));
 
 			while (enabledPoints.get(0).size() > 0) {
-				addItem(collageItems, SMALL_SIZE, enabledPoints, sizeSquareSmall, getResources().getColor(android.R.color.holo_blue_dark));
+				addItem(collageItems, SMALL_SIZE, enabledPoints, ContextCompat.getColor(context, android.R.color.holo_blue_dark));
 			}
 		} else {
 			for (int x = 0; x < 3; x++) {
 				for (int y = 0; y < 3; y++) {
 					Point point = new Point(x * 3, y * 3);
 					CollageItem collageItem = new CollageItem();
-//                    setDisabledPoints(point, BIG_SIZE);
-					collageItem.setParams(point.x, point.y, sizeSquareBig, getResources().getColor(android.R.color.holo_blue_bright));
-//                    collageItem.setBitmapDrawable(BitmapFactory.decodeResource(getResources(), ic_autorenew_white_36dp));
-					collageItem.setBitmapDrawable((BitmapDrawable) getResources().getDrawable(R.drawable.ic_action_picture));
+					collageItem.setParams(point.x, point.y, BIG_SIZE, ContextCompat.getColor(context, android.R.color.holo_blue_bright));
+					collageItem.setBitmapDrawable((BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.ic_action_picture));
 					collageItems.add(collageItem);
 				}
 			}
 		}
 		itemsCount = collageItems.size();
-		collageItemList = collageItems;
+		//collageItemList = collageItems;
 		return collageItems;
 	}
 
 	private void setAllViews(ArrayList<CollageItem> _collageItems) {
-		removeAllViews();
-		for (CollageItem item : _collageItems) {
-//            Log.d(TAG, "setAllViews: X = " + item.getPosX() + " / Y = " + item.getPosY()
-//                    + " / Size = " + item.getItemSize());
-			setView(item);
+		if (guidelines != null) {
+			decreaseGuidelines(_collageItems);
+		} else {
+			newGuidelines();
+			for (CollageItem item : _collageItems) {
+				setView(item);
+			}
+			increaseGuidelines(_collageItems);
 		}
+		if (collageItemList == null) collageItemList = _collageItems;
 	}
 
 	private ArrayList<Point> enabledPoints(int _from, int _to) {
@@ -386,24 +398,19 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		return points;
 	}
 
-	private void addItem(ArrayList<CollageItem> _collageItems, int _size, ArrayList<ArrayList<Point>> _points, float _sizeSquare, int _color) {
+	private void addItem(ArrayList<CollageItem> _collageItems, int _size, ArrayList<ArrayList<Point>> _points, int _color) {
 		Point point = getRandArrayElement(_points.get(_size - 1));
 		if (point != null) {
 			CollageItem collageItem = new CollageItem();
 			setDisabledPoints(point, _size, _points);
-			collageItem.setParams(point.x, point.y, _sizeSquare, _color);
+			collageItem.setParams(point.x, point.y, _size, _color);
 
-			collageItem.setBitmapDrawable((BitmapDrawable) getResources().getDrawable(R.drawable.ic_action_picture));
+			collageItem.setBitmapDrawable((BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.ic_action_picture));
 			_collageItems.add(collageItem);
 		}
 	}
 
 	private void setView(CollageItem _item) {
-
-		float marginX = (gridLineWidth + sizeSquareSmall) * _item.getPosX() + gridLineWidth;
-		float marginY = (gridLineWidth + sizeSquareSmall) * _item.getPosY() + gridLineWidth;
-//        Log.d(TAG, "setView: marginX = " + gridLineWidth + " / " + sizeSquareSmall + " / " + _item.getPosX());
-
 		_item.setViewId(getNewId());
 
 		ImageSwitcher imageSwitcher = new ImageSwitcher(context);
@@ -412,12 +419,10 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		imageSwitcher.setInAnimation(dragIn);
 		imageSwitcher.setOutAnimation(dragOut);
 
-
 		imageSwitcher.setBackgroundColor(_item.getItemColor());
 
 		ImageView imageView = new ImageView(context);
 		imageView.setImageDrawable(_item.getBitmapDrawable());
-
 
 		imageSwitcher.addView(imageView);
 		imageSwitcher.addView(new ImageView(context));
@@ -426,19 +431,22 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		imageSwitcher.setOnDragListener(new ViewDragListener());
 		addView(imageSwitcher);
 
+		ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.WRAP_CONTENT, ConstraintLayout.LayoutParams.WRAP_CONTENT);
 
-		PercentRelativeLayout.LayoutParams params = (PercentRelativeLayout.LayoutParams) imageSwitcher.getLayoutParams();
-
-		PercentLayoutHelper.PercentLayoutInfo info = params.getPercentLayoutInfo();
-
-		info.heightPercent = _item.getItemSize();
-		info.widthPercent = _item.getItemSize();
-		info.topMarginPercent = marginY;
-		info.leftMarginPercent = marginX;
-		if (info.leftMarginPercent + info.topMarginPercent < 0.021) {
-			Log.d(TAG, "setView: info heightPercent = " + info.heightPercent + " / topMarginPercent = " + info.topMarginPercent + " / leftMarginPercent = " + info.leftMarginPercent);
-		}
+		params.height = 0;
+		params.width = 0;
+		params.setMargins(0, 0, gridLineWidthDp, 0);
 		imageSwitcher.setLayoutParams(params);
+
+		ConstraintSet set = new ConstraintSet();
+		set.clone(constraintLayout);
+
+		set.connect(imageSwitcher.getId(), ConstraintSet.LEFT, guidelines[VERTICAL][_item.getPosX()], ConstraintSet.LEFT, 0);
+		set.connect(imageSwitcher.getId(), ConstraintSet.RIGHT, guidelines[VERTICAL][_item.getPosX() + _item.getItemSize()], ConstraintSet.RIGHT, gridLineWidthDp);
+		set.connect(imageSwitcher.getId(), ConstraintSet.TOP, guidelines[HORIZONTAL][_item.getPosY()], ConstraintSet.TOP, 0);
+		set.connect(imageSwitcher.getId(), ConstraintSet.BOTTOM, guidelines[HORIZONTAL][_item.getPosY() + _item.getItemSize()], ConstraintSet.BOTTOM, gridLineWidthDp);
+		Guideline g = (Guideline) findViewById(guidelines[VERTICAL][_item.getPosX()]);
+		set.applyTo(constraintLayout);
 	}
 
 	private Point getRandArrayElement(ArrayList<Point> _points) {
@@ -470,7 +478,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		for (int x = _fromX; x < _toX; x++) {
 			for (int y = _fromY; y < _toY; y++) {
 				Point delPoint = new Point(x, y);
-				//Log.d(TAG, "removeDisabledPoints: delPoint = " + delPoint.toString());
 				_points.remove(delPoint);
 			}
 		}
@@ -525,6 +532,110 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		}
 	}
 
+	private class DecreaseTransitionListener implements Transition.TransitionListener {
+
+		private ArrayList<CollageItem> collageItems;
+		private ConstraintSet constraintSet;
+
+		DecreaseTransitionListener(ArrayList<CollageItem> collageItems, ConstraintSet constraintSet) {
+			this.collageItems = collageItems;
+			this.constraintSet = constraintSet;
+		}
+
+		@Override
+		public void onTransitionStart(@NonNull Transition transition) {
+
+		}
+
+		@Override
+		public void onTransitionEnd(@NonNull Transition transition) {
+			if (disposableTransition != null && !disposableTransition.isDisposed())
+				disposableTransition.dispose();
+
+			disposableTransition = Observable.just(createNewCollage())
+				.subscribeOn(AndroidSchedulers.mainThread())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(this::moveGuidelines);
+		}
+
+		private ArrayList<CollageItem> createNewCollage() {
+			for (CollageItem item : collageItemList)
+				constraintLayout.removeView(findViewById(item.getViewId()));
+			collageItemList = collageItems;
+			for (CollageItem item : collageItems)
+				setView(item);
+			return collageItems;
+		}
+
+		private void moveGuidelines(ArrayList<CollageItem> _collageItems) {
+			constraintSet = new ConstraintSet();
+			constraintSet.clone(constraintLayout);
+			TransitionSet set = new TransitionSet();
+			set.addTransition(new Fade());
+			set.addTransition(new ChangeBounds());
+			set.setOrdering(TransitionSet.ORDERING_TOGETHER);
+			set.addListener(new IncreaseTransitionListener(_collageItems));
+			set.setDuration(100);
+			set.setInterpolator(new LinearOutSlowInInterpolator());
+
+			TransitionManager.beginDelayedTransition(constraintLayout, set);
+			constraintLayout.setVisibility(VISIBLE);
+			for (int i = 0; i < 10; i++) {
+				float percent = ((1f - gridLineWidth) / 9f) * i + gridLineWidth;
+				constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], percent);
+				constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], percent);
+			}
+			constraintLayout.setAlpha(1f);
+			constraintSet.applyTo(constraintLayout);
+		}
+
+		@Override
+		public void onTransitionCancel(@NonNull Transition transition) {
+		}
+
+		@Override
+		public void onTransitionPause(@NonNull Transition transition) {
+		}
+
+		@Override
+		public void onTransitionResume(@NonNull Transition transition) {
+		}
+	}
+
+
+	private class IncreaseTransitionListener implements Transition.TransitionListener {
+
+		private ArrayList<CollageItem> collageItems;
+
+		IncreaseTransitionListener(ArrayList<CollageItem> collageItems) {
+			this.collageItems = collageItems;
+		}
+
+		@Override
+		public void onTransitionStart(@NonNull Transition transition) {
+
+		}
+
+		@Override
+		public void onTransitionEnd(@NonNull Transition transition) {
+			Log.d(TAG, "onTransitionEnd1: ");
+		}
+
+		@Override
+		public void onTransitionCancel(@NonNull Transition transition) {
+
+		}
+
+		@Override
+		public void onTransitionPause(@NonNull Transition transition) {
+
+		}
+
+		@Override
+		public void onTransitionResume(@NonNull Transition transition) {
+		}
+	}
+
 	private class ViewDragListener implements OnDragListener {
 		@Override
 		public boolean onDrag(View v, DragEvent event) {
@@ -540,7 +651,7 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 					targetView = (ImageSwitcher) v;
 					targetViewId = targetView.getId();
 					targetDrawable = (BitmapDrawable) ((ImageView) targetView.getChildAt(targetView.getDisplayedChild())).getDrawable();
-					targetView.setImageDrawable(getResources().getDrawable(R.drawable.ic_autorenew_white_36dp));
+					targetView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_autorenew_white_36dp));
 					break;
 				case DragEvent.ACTION_DRAG_EXITED:
 					mInView = false;
@@ -595,7 +706,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 				case DragEvent.ACTION_DRAG_ENDED:
 
 					if (!mInView) {
-						Log.d(TAG, "onDrag: --------------------------------------");
 						sourceView.post(() -> {
 							if (sourceView.getVisibility() != View.VISIBLE) {
 								sourceView.setVisibility(View.VISIBLE);
@@ -620,12 +730,11 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 
 	@Override
 	protected Parcelable onSaveInstanceState() {
-//        if (disposableGetImages != null && !disposableGetImages.isDisposed())
-//            disposableGetImages.dispose();
-
 		Bundle bundle = new Bundle();
 		bundle.putParcelable(TAG_SUPER_STATE, super.onSaveInstanceState());
-		bundle.putParcelableArrayList(TAG_ITEM_LIST, collageItemList);
+		// TODO: 05.10.2017 java.lang.RuntimeException: android.os.TransactionTooLargeException: on API>=24
+//		bundle.putParcelableArrayList(TAG_ITEM_LIST, collageItemList);
+
 		bundle.putBoolean(TAG_DRAG_ENABLED, dragEnabled);
 		return bundle;
 	}
@@ -635,10 +744,11 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 		if (state instanceof Bundle) // implicit null check
 		{
 			Bundle bundle = (Bundle) state;
-			collageItemList = bundle.getParcelableArrayList(TAG_ITEM_LIST);
-			setAllViews(collageItemList);
 
-			Log.d(TAG, "+----onRestoreInstanceState:  collageItemList.size() = " + collageItemList.size());
+			// TODO: 05.10.2017 java.lang.RuntimeException: android.os.TransactionTooLargeException: on API>=24
+//			collageItemList = bundle.getParcelableArrayList(TAG_ITEM_LIST);
+//			setAllViews(collageItemList);
+
 			// TODO: 19.01.2017 тут все грузится с космоса/кеша, а надо из массива
 			// хранить в массиве УРИ и при его наличии качать с него, иначе космос
 //            for (CollageItem item : collageItemList) {
@@ -648,6 +758,6 @@ public class CollageView extends PercentRelativeLayout implements ICollageView {
 			state = bundle.getParcelable(TAG_SUPER_STATE);
 		}
 		super.onRestoreInstanceState(state);
-	}
 
+	}
 }

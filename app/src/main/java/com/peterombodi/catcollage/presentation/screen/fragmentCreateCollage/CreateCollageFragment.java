@@ -17,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,15 +32,13 @@ import com.peterombodi.catcollage.ObjectGraph;
 import com.peterombodi.catcollage.R;
 import com.peterombodi.catcollage.presentation.customView.borderedTextView.Border;
 import com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView;
-import com.peterombodi.catcollage.presentation.customView.collageView.CollageView2;
+import com.peterombodi.catcollage.presentation.customView.collageView.CollageView;
 import com.peterombodi.catcollage.presentation.customView.collageView.ICollageView;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.ICreateCollage;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.CreateCollagePresenter;
 
 import static com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView.BORDER_TOP;
 import static com.peterombodi.catcollage.utils.Helper.getProgressColor;
 
-public class CreateCollageFragment extends Fragment implements ICreateCollage.IView{
+public class CreateCollageFragment extends Fragment implements ICreateCollage.IView {
 
     private static final String TAG = "CreateCollageFragment";
     private static final int BORDER_WIDTH = 4;
@@ -61,7 +58,7 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
     private ObjectGraph mGraph;
     private CreateCollagePresenter presenter;
 
-    private  ViewTreeObserver.OnGlobalLayoutListener listener;
+    private ViewTreeObserver.OnGlobalLayoutListener listener;
 
     public CreateCollageFragment() {
         // Required empty public constructor
@@ -77,26 +74,24 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_create_collage, container, false);
-
-        iCollageView = (CollageView2) view.findViewById(R.id.cv_MA);
-
+        iCollageView = (CollageView) view.findViewById(R.id.cv_MA);
         presenter.registerView(this);
 
-        sbItemsSize = (SeekBar) view.findViewById(R.id.sb_items_size);
-        sbBackColor = (SeekBar) view.findViewById(R.id.sb_color);
-        progressBar = (ProgressBar) view.findViewById(R.id.progress_spinner);
+        sbItemsSize = view.findViewById(R.id.sb_items_size);
+        sbBackColor = view.findViewById(R.id.sb_color);
+        progressBar = view.findViewById(R.id.progress_spinner);
 
-        btv1 = (BorderedTextView) view.findViewById(R.id.btv1_AM);
-        btv2 = (BorderedTextView) view.findViewById(R.id.btv2_AM);
+        btv1 = view.findViewById(R.id.btv1_AM);
+        btv2 = view.findViewById(R.id.btv2_AM);
 
-        sbItemsSize.setMax(CollageView2.maxDensity);
+        sbItemsSize.setMax(CollageView.maxDensity);
         sbItemsSize.setOnSeekBarChangeListener(seekBarChangeListener);
         sbBackColor.setOnSeekBarChangeListener(seekBarChangeListener);
         sbBackColor.setMax(256 * 3 - 1);
         setThumb(sbItemsSize, Color.argb(255, 0, 0, 255), Color.GRAY);
 
         //set initial color and gradient for views
-        listener = new ViewTreeObserver.OnGlobalLayoutListener(){
+        listener = new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 setInitParams();
@@ -105,7 +100,7 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
         };
         sbItemsSize.getViewTreeObserver().addOnGlobalLayoutListener(listener);
 
-        Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar1);
+        Toolbar toolbar = view.findViewById(R.id.toolbar1);
         if (toolbar != null) {
             ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
             setHasOptionsMenu(true);
@@ -117,14 +112,14 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
 
     @Override
     public void onAttach(Context context) {
-        if (presenter==null) {
+        if (presenter == null) {
             mGraph = ObjectGraph.getInstance(Application.getContext());
             presenter = mGraph.getCreateCollagePresenter();
         }
         super.onAttach(context);
     }
 
-     @Override
+    @Override
     public void onDestroyView() {
         presenter.unRegisterView();
         super.onDestroyView();
@@ -160,7 +155,7 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
         }
     }
 
-    private void setInitParams(){
+    private void setInitParams() {
         int color = getProgressColor(sbBackColor.getProgress());
 
         btv1.setWidth(btv1.getHeight());
@@ -221,13 +216,9 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
                 public void onProgressChanged(SeekBar _seekBar, int _progress, boolean _fromUser) {
                     switch (_seekBar.getId()) {
                         case R.id.sb_items_size:
-                            if (_fromUser) {
-                                Log.d(TAG, "onProgressChanged: ***************************************");
-                                presenter.buildCollage(_progress);
-                            }
+                            if (_fromUser) presenter.buildCollage(_progress);
                             break;
                         case R.id.sb_color:
-                            Log.d(TAG, "onProgressChanged: progress = " + _progress);
                             int color = getProgressColor(_progress);
                             if (_fromUser) {
                                 setThumb(sbItemsSize, color, Color.DKGRAY);
@@ -251,13 +242,12 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
 
     @Override
     public void setViewsEnabled(boolean _enabled) {
-        Log.d(TAG, "setViewsEnabled: +++++++++++++"+_enabled);
         progressBar.setVisibility(_enabled ? View.GONE : View.VISIBLE);
         iCollageView.setDragEnabled(_enabled);
         sbItemsSize.setEnabled(_enabled);
         if (action_download != null) setMenuItem(action_download, _enabled);
         if (action_save != null) setMenuItem(action_save, _enabled);
-        // TODO: 24.01.2017 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: 24.01.2017
         //invalidateOptionsMenu();
     }
 
@@ -279,6 +269,5 @@ public class CreateCollageFragment extends Fragment implements ICreateCollage.IV
         if (savedInstanceState != null && savedInstanceState.getBoolean(KEY_SUBSCRIBE))
             presenter.downloadingSubscribe();
         presenter.restoreCollage();
-
     }
 }

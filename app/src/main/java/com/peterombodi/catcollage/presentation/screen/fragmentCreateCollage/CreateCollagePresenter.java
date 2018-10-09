@@ -45,7 +45,6 @@ public class CreateCollagePresenter implements ICreateCollage.IPresenter {
 
     @Override
     public void registerView(ICreateCollage.IView _view) {
-        Log.d(TAG, "registerView:");
         this.mView = _view;
 
         if (downloadDataRx == null) {
@@ -53,7 +52,8 @@ public class CreateCollagePresenter implements ICreateCollage.IPresenter {
             downloadDataRx = mGraph.getDownloadDataRx();
         }
         if (downloadImage == null) {
-            downloadImage = new DownloadImage(Application.getContext());
+            //downloadImage = new DownloadImage(Application.getContext());
+            downloadImage = new DownloadImage();
             subjectLoadImage = downloadImage.getPublishSubject();
         }
 
@@ -62,14 +62,12 @@ public class CreateCollagePresenter implements ICreateCollage.IPresenter {
 
     @Override
     public void unRegisterView() {
-        Log.d(TAG, "unRegisterView:");
         mView = null;
     }
 
     @Override
     public void downloadingSubscribe() {
         if (subjectLoadImage == null) subjectLoadImage = downloadImage.getPublishSubject();
-        Log.d(TAG, "downloadingSubscribe:");
         subscription = subjectLoadImage.subscribe(this::progressCheck);
     }
 
@@ -79,7 +77,6 @@ public class CreateCollagePresenter implements ICreateCollage.IPresenter {
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();
             isSubscribe = subscription.isDisposed();
-            Log.d(TAG, "downloadingDispose: " + subscription.isDisposed());
         }
         return isSubscribe;
     }

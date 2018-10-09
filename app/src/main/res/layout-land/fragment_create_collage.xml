@@ -17,19 +17,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:background="@color/colorPrimaryLight"
         android:paddingBottom="@dimen/cv_vertical_margin"
         android:paddingLeft="@dimen/cv_horizontal_margin"
         android:paddingRight="@dimen/cv_horizontal_margin"
-        android:paddingTop="@dimen/cv_vertical_margin"
-        android:weightSum="1">
+        android:paddingTop="@dimen/cv_vertical_margin">
 
         <android.support.v7.widget.CardView
             android:id="@+id/collage_card_FCC"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_width="0dp"
             android:layout_weight="1"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
             card_view:cardElevation="2dp"
@@ -50,7 +49,8 @@
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             card_view:cardElevation="2dp"
             card_view:cardUseCompatPadding="true">
@@ -122,6 +122,15 @@
         </android.support.v7.widget.CardView>
 
     </LinearLayout>
+
+
+    <!--<android.support.percent.PercentRelativeLayout-->
+    <!--android:id="@+id/prlCollage"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content">-->
+
+    <!--</android.support.percent.PercentRelativeLayout>-->
+
 
 </LinearLayout>
 

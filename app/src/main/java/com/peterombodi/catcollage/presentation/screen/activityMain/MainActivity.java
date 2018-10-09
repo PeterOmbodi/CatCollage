@@ -12,10 +12,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG_CREATE_COLLAGE_FRAGMENT = "TAG_CREATE_COLLAGE_FRAGMENT";
 
-    //implements IMainActivity.IView
-
-    private static final String TAG = "MainActivity";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
