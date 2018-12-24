@@ -3,30 +3,26 @@ package com.peterombodi.catcollage;
 import android.content.Context;
 
 import com.peterombodi.catcollage.data.api.DownloadDataRx;
-import com.peterombodi.catcollage.presentation.screen.fragmentCreateCollage.CreateCollagePresenter;
+import com.peterombodi.catcollage.presentation.screen.collage_create.CollagePresenter;
+
+import org.androidannotations.annotations.AfterInject;
+import org.androidannotations.annotations.EBean;
+
+import me.eugeniomarletti.kotlin.metadata.shadow.javax.inject.Singleton;
 
 /**
  * Created by Admin on 10.01.2017.
  */
+@EBean(scope = EBean.Scope.Singleton)
+public class ObjectGraph {
 
-public final class ObjectGraph {
+    private DownloadDataRx mDownloadDataRx;
+    private CollagePresenter collagePresenter;
 
-    private static final String TAG = "ObjectGraph";
-    private static ObjectGraph graph;
-
-    public static final ObjectGraph getInstance(final Context _context) {
-        if (graph == null) {
-            graph = new ObjectGraph(_context);
-        }
-        return graph;
-    }
-
-    private final DownloadDataRx mDownloadDataRx;
-    private final CreateCollagePresenter mCreateCollagePresenter;
-
-    public ObjectGraph(final Context _context){
+    @AfterInject
+    void init() {
         mDownloadDataRx = new DownloadDataRx();
-        mCreateCollagePresenter = new CreateCollagePresenter();
+        collagePresenter = new CollagePresenter();
     }
 
     public final DownloadDataRx getDownloadDataRx() {
@@ -34,8 +30,7 @@ public final class ObjectGraph {
     }
 
 
-    public final CreateCollagePresenter getCreateCollagePresenter(){
-        return mCreateCollagePresenter;
+    public final CollagePresenter getCollagePresenter(){
+        return collagePresenter;
     }
-
 }

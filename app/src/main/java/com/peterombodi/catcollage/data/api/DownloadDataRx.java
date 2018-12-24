@@ -24,7 +24,7 @@ public class DownloadDataRx {
 
     private static Observable<CatApiResponse> observableRetrofit;
     private LruCache<Class<CatApiResponse>, Observable<CatApiResponse>> apiObservables;
-    private CatApiRestRx getData;
+    private ICatApiRest getData;
 
     public DownloadDataRx() {
         apiObservables = new LruCache<>(10);
@@ -34,33 +34,33 @@ public class DownloadDataRx {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
 
-        getData = retrofit.create(CatApiRestRx.class);
-        //Observable<CatApiResponse> observableRetrofit = getCatsData.connect(PARAM_FORMAT_XML,2);
-
+        getData = retrofit.create(ICatApiRest.class);
     }
 
-    public CatApiRestRx getAPI(){
+    public ICatApiRest getAPI() {
         return getData;
     }
 
-
-    public Observable<CatApiResponse> getPreparedObservable(Observable<CatApiResponse> unPreparedObservable, Class<CatApiResponse> clazz, boolean cacheObservable, boolean useCache){
+    public Observable<CatApiResponse> getPreparedObservable(Observable<CatApiResponse> unPreparedObservable,
+                                                            Class<CatApiResponse> clazz,
+                                                            boolean cacheObservable,
+                                                            boolean useCache) {
 
         Observable<CatApiResponse> preparedObservable = null;
 
-        if(useCache)//this way we don't reset anything in the cache if this is the only instance of us not wanting to use it.
+        if (useCache)//this way we don't reset anything in the cache if this is the only instance of us not wanting to use it.
             preparedObservable = (Observable<CatApiResponse>) apiObservables.get(clazz);
 
-        if(preparedObservable!=null)
+        if (preparedObservable != null)
             return preparedObservable;
 
         //we are here because we have never created this observable before or we didn't want to use the cache...
 
         preparedObservable = (Observable<CatApiResponse>) unPreparedObservable
-            .subscribeOn(Schedulers.newThread())
-            .observeOn(AndroidSchedulers.mainThread());
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread());
 
-        if(cacheObservable){
+        if (cacheObservable) {
             preparedObservable = preparedObservable.cache();
             apiObservables.put(clazz, preparedObservable);
         }

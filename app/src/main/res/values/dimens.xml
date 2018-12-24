@@ -4,4 +4,48 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="cv_horizontal_margin">8dp</dimen>
     <dimen name="cv_vertical_margin">8dp</dimen>
+
+    <dimen name="padding_triple">48dp</dimen>
+    <dimen name="padding_double">32dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_default">16dp</dimen>
+    <dimen name="padding_medium">12dp</dimen>
+    <dimen name="padding_half">8dp</dimen>
+    <dimen name="padding_quart">4dp</dimen>
+
+    <dimen name="margin_triple">48dp</dimen>
+    <dimen name="margin_double">32dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
+    <dimen name="margin_default">16dp</dimen>
+    <dimen name="margin_medium">12dp</dimen>
+    <dimen name="margin_half">8dp</dimen>
+    <dimen name="margin_quart">4dp</dimen>
+    <dimen name="margin_small">3dp</dimen>
+
+    <dimen name="elevation_card_small">2dp</dimen>
+    <dimen name="elevation_card_medium">4dp</dimen>
+    <dimen name="elevation_card_normal">6dp</dimen>
+    <dimen name="elevation_card_big">8dp</dimen>
+
+    <dimen name="elevation_button_small">2dp</dimen>
+    <dimen name="elevation_button_medium">4dp</dimen>
+    <dimen name="elevation_button_normal">6dp</dimen>
+    <dimen name="elevation_button_big">8dp</dimen>
+
+    <dimen name="elevation_fab">6dp</dimen>
+    <dimen name="elevation_dialog">24dp</dimen>
+    <dimen name="elevation_drawer">16dp</dimen>
+    <dimen name="elevation_app_bar">4dp</dimen>
+
+    <!--Typography-->
+    <dimen name="text_size_budge">10sp</dimen>
+    <dimen name="text_size_very_small">12sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_default">16sp</dimen>
+    <dimen name="text_size_standard">17sp</dimen>
+    <dimen name="text_size_big">18sp</dimen>
+    <dimen name="text_size_large">20sp</dimen>
+    <dimen name="text_size_title">24sp</dimen>
+    <dimen name="text_size_points_gigantic">30sp</dimen>
+
 </resources>

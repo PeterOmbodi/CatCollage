@@ -2,26 +2,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_download"
-        android:icon="@drawable/ic_action_download"
+        android:id="@+id/actionDownload"
+        android:icon="@drawable/ic_download"
         android:title="@string/menu_title"
         app:showAsAction="always">
     </item>
     <item
-        android:id="@+id/action_save"
-        android:icon="@android:drawable/ic_menu_save"
+        android:id="@+id/actionSave"
+        android:icon="@drawable/ic_save"
         android:title="@string/menu_title"
         app:showAsAction="always">
     </item>
     <item
-        android:id="@+id/action_open"
-        android:icon="@drawable/ic_folder_open_black_24dp"
+        android:id="@+id/actionOpen"
+        android:icon="@drawable/ic_folder"
         android:title="@string/menu_title"
         app:showAsAction="always">
     </item>
     <item
-        android:id="@+id/action_share"
-        android:icon="@android:drawable/ic_menu_share"
+        android:id="@+id/actionShare"
+        android:icon="@drawable/ic_share"
         android:title="@string/menu_title"
         app:showAsAction="always">
     </item>

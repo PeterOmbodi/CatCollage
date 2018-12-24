@@ -1,57 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:card_view="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:id="@+id/fragment_create_collage"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              tools:context="com.peterombodi.catcollage.presentation.screen.activityMain.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_create_collage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.peterombodi.catcollage.presentation.screen.main.MainActivity">
 
-    <include layout="@layout/toolbar">
+    <include
+        layout="@layout/toolbar" />
 
-    </include>
-
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:background="@color/colorPrimaryLight"
-        android:paddingBottom="@dimen/cv_vertical_margin"
-        android:paddingLeft="@dimen/cv_horizontal_margin"
-        android:paddingRight="@dimen/cv_horizontal_margin"
-        android:paddingTop="@dimen/cv_vertical_margin"
-        android:weightSum="1">
+        android:layout_weight="1"
+        android:layout_height="0dp">
+
 
         <android.support.v7.widget.CardView
             android:id="@+id/collage_card_FCC"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
             android:layout_gravity="center"
+            android:layout_marginTop="8dp"
             android:gravity="center"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintTop_toTopOf="parent"
             card_view:cardElevation="2dp"
             card_view:cardUseCompatPadding="true">
 
-            <com.peterombodi.catcollage.presentation.customView.collageView.CollageView
-                android:id="@+id/cv_MA"
+            <com.peterombodi.catcollage.presentation.custom_view.collage.CollageView
+                android:id="@+id/collage_FCC"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_weight="1"
-                android:layout_margin="@dimen/cv_horizontal_margin"
-                android:gravity="center"
-                >
+                android:layout_margin="@dimen/cv_horizontal_margin">
 
-            </com.peterombodi.catcollage.presentation.customView.collageView.CollageView>
+            </com.peterombodi.catcollage.presentation.custom_view.collage.CollageView>
 
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/collage_card_FCC"
+            app:layout_constraintTop_toBottomOf="@+id/collage_card_FCC"
             card_view:cardElevation="2dp"
             card_view:cardUseCompatPadding="true">
 
@@ -59,69 +60,79 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:orientation="horizontal">
-
-                <com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView
-                    android:id="@+id/btv1_AM"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top"
-                    android:layout_marginTop="18dp"
-                    android:gravity="center"
-                    android:text="1"/>
+                android:gravity="center"
+                android:background="@drawable/ic_cat_head"
+                android:backgroundTint="@color/colorPrimaryLightTransparent"
+                android:orientation="vertical">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/ivMinSize"
+                        android:layout_width="24dp"
+                        android:layout_height="42dp"
+                        android:layout_marginStart="@dimen/margin_default"
+                        android:src="@drawable/ic_cat_1"
+                        android:tint="@color/colorAccent" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:text="@string/items_size"/>
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal|bottom"
+                        android:text="@string/items_size" />
 
-                    <SeekBar
-                        android:id="@+id/sb_items_size"
-                        style="@style/Widget.AppCompat.SeekBar"
-                        android:layout_marginTop="@dimen/cv_vertical_margin"
-                        android:layout_marginBottom="@dimen/cv_vertical_margin"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:progress="1"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="@string/border_color"/>
-
-                    <SeekBar
-                        android:id="@+id/sb_color"
-                        style="@style/Widget.AppCompat.SeekBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:maxHeight="4dp"
-                        android:minHeight="4dp"/>
+                    <ImageView
+                        android:id="@+id/ivMaxSize"
+                        android:layout_width="32dp"
+                        android:layout_height="42dp"
+                        android:layout_marginEnd="@dimen/margin_default"
+                        android:src="@drawable/ic_cat_1"
+                        android:tint="@color/colorAccent" />
 
                 </LinearLayout>
 
-                <com.peterombodi.catcollage.presentation.customView.borderedTextView.BorderedTextView
-                    android:id="@+id/btv2_AM"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:text="3"
-                    android:textSize="20dp"/>
 
+                <SeekBar
+                    android:id="@+id/sb_items_size"
+                    style="@style/Widget.AppCompat.SeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/cv_vertical_margin"
+                    android:paddingStart="@dimen/padding_large"
+                    android:paddingEnd="@dimen/padding_large"
+                    android:paddingTop="@dimen/padding_default"
+                    android:paddingBottom="@dimen/padding_default"
+                    android:progress="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/border_color" />
+
+                <SeekBar
+                    android:id="@+id/sb_color"
+                    style="@style/Widget.AppCompat.SeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxHeight="4dp"
+                    android:minHeight="4dp"
+                    android:paddingStart="@dimen/padding_large"
+                    android:paddingEnd="@dimen/padding_large"
+                    android:paddingTop="@dimen/padding_default"
+                    android:paddingBottom="@dimen/padding_default" />
 
             </LinearLayout>
+
+
         </android.support.v7.widget.CardView>
 
-    </LinearLayout>
+
+    </android.support.constraint.ConstraintLayout>
+
 
 </LinearLayout>
 

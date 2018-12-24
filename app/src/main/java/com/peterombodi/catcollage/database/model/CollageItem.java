@@ -1,60 +1,39 @@
 package com.peterombodi.catcollage.database.model;
 
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import com.peterombodi.catcollage.database.CatCollageDatabase;
-import com.raizlabs.android.dbflow.annotation.Column;
-import com.raizlabs.android.dbflow.annotation.PrimaryKey;
-import com.raizlabs.android.dbflow.annotation.Table;
-import com.raizlabs.android.dbflow.structure.BaseModel;
 
 import java.util.UUID;
 
 /**
  * Created by Admin on 14.12.2016.
  */
-// TODO: 22.09.2017 https://agrosner.gitbooks.io/dbflow/content/ STOP!!!!!!!!!!!
-
-
-@Table(database = CatCollageDatabase.class)
-public class CollageItem extends BaseModel implements Parcelable {
+public class CollageItem implements Parcelable {
 
     public CollageItem() {
-        this.id = UUID.randomUUID();
     }
 
-    @PrimaryKey // at least one primary key required
     UUID id;
 
-    @Column
     UUID collageId;
 
-    @Column
     int viewId;
 
-    @Column
     int posX;
 
-    @Column
     int posY;
 
-    @Column
     int itemSize;
 
-    @Column
     int itemColor;
 
-    BitmapDrawable bitmapDrawable;
+    Drawable bitmapDrawable;
 
-    @Column
     String fileName;
 
-    @Column
     String url;
 
-    @Column
     int loadStatus;  /* 0 -wait, 1- ok, 2 - error */
 
 
@@ -98,11 +77,11 @@ public class CollageItem extends BaseModel implements Parcelable {
         this.itemColor = itemColor;
     }
 
-    public BitmapDrawable getBitmapDrawable() {
+    public Drawable getBitmapDrawable() {
         return bitmapDrawable;
     }
 
-    public void setBitmapDrawable(BitmapDrawable bitmapDrawable) {
+    public void setDrawable(Drawable bitmapDrawable) {
         this.bitmapDrawable = bitmapDrawable;
     }
 
@@ -126,14 +105,6 @@ public class CollageItem extends BaseModel implements Parcelable {
         this.posX = posX;
         this.posY = posY;
         this.itemSize = itemSize;
-        this.itemColor = itemColor;
-    }
-
-    // for oldest code
-    public void setParams(int posX, int posY, float itemSize, int itemColor) {
-        this.posX = posX;
-        this.posY = posY;
-        this.itemSize = (int) itemSize;
         this.itemColor = itemColor;
     }
 
@@ -166,7 +137,7 @@ public class CollageItem extends BaseModel implements Parcelable {
         dest.writeInt(this.posY);
         dest.writeFloat(this.itemSize);
         dest.writeInt(this.itemColor);
-        dest.writeParcelable((Parcelable) this.bitmapDrawable.getBitmap(), flags);
+        dest.writeParcelable((Parcelable) this.bitmapDrawable, flags);
         dest.writeString(this.fileName);
         dest.writeString(this.url);
         dest.writeInt(this.loadStatus);
@@ -178,7 +149,7 @@ public class CollageItem extends BaseModel implements Parcelable {
         this.posY = in.readInt();
         this.itemSize = in.readInt();
         this.itemColor = in.readInt();
-        this.bitmapDrawable = in.readParcelable(BitmapDrawable.class.getClassLoader());
+        this.bitmapDrawable = in.readParcelable(Drawable.class.getClassLoader());
         this.fileName = in.readString();
         this.url = in.readString();
         this.loadStatus = in.readByte();

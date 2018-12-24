@@ -6,13 +6,13 @@
 
     <application
         android:allowBackup="true"
-        android:name=".Application"
+        android:name=".Application_"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:fullBackupContent="true">
-        <activity android:name="com.peterombodi.catcollage.presentation.screen.activityMain.MainActivity">
+        <activity android:name="com.peterombodi.catcollage.presentation.screen.main.MainActivity_">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
