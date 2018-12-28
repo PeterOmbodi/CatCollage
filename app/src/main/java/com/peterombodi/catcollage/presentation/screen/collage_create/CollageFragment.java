@@ -1,5 +1,6 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,6 +13,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -27,6 +29,7 @@ import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.MVPFragment;
 import com.peterombodi.catcollage.presentation.custom_view.collage.CollageView;
 import com.peterombodi.catcollage.presentation.custom_view.collage.ICollageView;
+import com.peterombodi.catcollage.utils.picasso.PicassoHelper;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
@@ -47,14 +50,16 @@ import static com.peterombodi.catcollage.utils.Helper.getProgressColor;
 public class CollageFragment extends MVPFragment<CollageContract.CollagePresenter> implements CollageContract.CreateCollageView, ICollageView {
 
     private static final String KEY_SUBSCRIBE = "KEY_SUBSCRIBE";
-    private static final int BORDER_WIDTH = 4;
     private static final int SEEK_BAR_THUMB_RADIUS = 20;
     private static final int SEEK_BAR_THUMB_STROKE = 4;
+    private static final int COLOR_SEEK_BAR_MAX = 256 * 3 - 1;
 
     @Bean
     protected CollageInteractor interactor;
     @Bean
-    ObjectGraph objectGraph;
+    protected ObjectGraph objectGraph;
+    @Bean
+    protected PicassoHelper picasso;
 
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
@@ -95,7 +100,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @Override
     public void initPresenter() {
         presenter = objectGraph.getCollagePresenter();
-        presenter.registerFragment(this, interactor);
+        presenter.registerFragment(this, interactor, picasso.getDownloadingProgress());
     }
 
     @Override
@@ -106,8 +111,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @AfterViews
     protected void initViews() {
         sbBackColor.setOnSeekBarChangeListener(seekBarChangeListener);
-        sbBackColor.setMax(256 * 3 - 1);
-        setThumb(sbItemsSize, Color.argb(255, 0, 0, 255), colorPrimary);
+        sbBackColor.setMax(COLOR_SEEK_BAR_MAX);
         sbItemsSize.setMax(collageView.getMaxDensity());
         sbItemsSize.setOnSeekBarChangeListener(seekBarChangeListener);
         sbItemsSize.setProgressDrawable(getResources().getDrawable(R.drawable.bg_progress_bar));
@@ -121,7 +125,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
             setHasOptionsMenu(true);
         }
         collageView.setCallback(this);
-        presenter.restoreCollage();
+        presenter.subscribe();
     }
 
     @OptionsItem(R.id.actionDownload)
@@ -217,12 +221,15 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @Override
     public void setCollageView(ArrayList<CollageItem> collageItems) {
         collageView.setItemList(collageItems);
-        // TODO: 21.12.2018 need implement new logic for set collage views
     }
 
     @Override
-    public ImageView getItemPlaceholder(int viewId) {
-        return collageView.getCollageItemView(viewId);
+    public void setItemImage(CollageItem collageItem) {
+        ImageView imageView = collageView.getCollageItemView(collageItem.getViewId());
+        if (imageView != null) {
+            imageView.setTag(collageItem.getUrl());
+            picasso.downloadImage(imageView, collageItem);
+        }
     }
 
     // Menu Items enabling set
@@ -236,7 +243,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        presenter.setCollage(collageView.getItemList());
+        presenter.setCollageItems(collageView.getItemList());
         outState.putBoolean(KEY_SUBSCRIBE, presenter.disposeDownloading());
     }
 
@@ -250,6 +257,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
 
     @Override
     public void onBuildCollage(ArrayList<CollageItem> collageItems) {
-        presenter.setCollage(collageItems);
+        presenter.setCollageItems(collageItems);
+        setViewsEnabled(true);
     }
 }

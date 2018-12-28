@@ -1,25 +1,15 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
 import android.util.Log;
-import android.widget.ImageView;
 
-import com.peterombodi.catcollage.Application;
-import com.peterombodi.catcollage.ObjectGraph;
-import com.peterombodi.catcollage.data.api.DownloadDataRx;
-import com.peterombodi.catcollage.data.api.DownloadImage;
-import com.peterombodi.catcollage.data.model.CatApiResponse;
 import com.peterombodi.catcollage.data.model.ItemImage;
 import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.BasePresenter;
 
-import org.androidannotations.annotations.Bean;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.observers.DisposableObserver;
 import io.reactivex.subjects.PublishSubject;
 
 import static com.peterombodi.catcollage.constants.Constants.STATUS_DOWNLOAD_OK;
@@ -34,18 +24,12 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
 
     private static final String TAG = "CreateCollagePresenter";
 
-//    @Bean
-//    ObjectGraph mGraph;
-
-
     private CollageContract.CreateCollageView view;
     private CollageContract.CollageModel model;
 
-    private DownloadDataRx downloadDataRx;
     private Disposable subscription;
-    private PublishSubject<Integer> subjectLoadImage;
+    private PublishSubject<Integer> downloadingProgress;
 
-    private DownloadImage downloadImage;
     private int itemsDownloaded;
     private int itemsNotDownloaded;
     private ArrayList<CollageItem> collageItemList;
@@ -54,27 +38,24 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
     }
 
     @Override
-    public void registerFragment(CollageContract.CreateCollageView view, CollageContract.CollageModel model) {
+    public void registerFragment(CollageContract.CreateCollageView view, CollageContract.CollageModel model, PublishSubject<Integer> downloadingProgress) {
         this.view = view;
         this.model = model;
+        this.downloadingProgress = downloadingProgress;
         this.view.setPresenter(this);
     }
 
     @Override
     public void subscribe() {
-        if (downloadDataRx == null) {
-            //downloadDataRx = mGraph.getDownloadDataRx();
-        }
-        if (downloadImage == null) {
-            downloadImage = new DownloadImage();
-            subjectLoadImage = downloadImage.getPublishSubject();
-        }
+//        if (downloadImage == null) {
+//            downloadImage = new DownloadImage();
+//        }
+        restoreCollage();
     }
 
     @Override
     public void downloadingSubscribe() {
-        if (subjectLoadImage == null) subjectLoadImage = downloadImage.getPublishSubject();
-        subscription = subjectLoadImage.subscribe(this::progressCheck);
+        subscription = downloadingProgress.subscribe(this::progressCheck);
     }
 
     @Override
@@ -90,11 +71,12 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
     @Override
     public void setCollageDensity(int density) {
         disposeDownloading();
+        view.setViewsEnabled(false);
         view.buildCollage(density);
     }
 
     @Override
-    public void setCollage(ArrayList<CollageItem> collageItems) {
+    public void setCollageItems(ArrayList<CollageItem> collageItems) {
         collageItemList = collageItems;
     }
 
@@ -106,10 +88,10 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
 
     @Override
     public void restoreCollage() {
-        if (collageItemList != null && collageItemList.size()>0) {
+        if (collageItemList != null && collageItemList.size() > 0) {
             view.setCollageView(collageItemList);
             for (CollageItem item : collageItemList) {
-                if (item.getUrl() != null) downloadItemImage(item);
+                if (item.getUrl() != null) view.setItemImage(item);
             }
         } else {
             view.buildCollage(2);
@@ -119,28 +101,13 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
 
     public void loadData(int count) {
         view.setViewsEnabled(false);
-        subscription = subjectLoadImage.subscribe(this::progressCheck);
-
-        Observable<CatApiResponse> observableRetrofit =
-                downloadDataRx.getPreparedObservable(downloadDataRx.getAPI().getCats("xml", count, "small"),
-                        CatApiResponse.class, true, false);
-
-        observableRetrofit.subscribe(new DisposableObserver<CatApiResponse>() {
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "CatApiResponse.onComplete:");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d(TAG, "CatApiResponse.onError: " + e.toString());
-            }
-
-            @Override
-            public void onNext(CatApiResponse response) {
-                downloadImages(response.getImageList());
-            }
-        });
+        downloadingSubscribe();
+        compositeSubscriptions.add(
+                model.getCats(count)
+                        .subscribe(response -> downloadImages(response.getImageList()),
+                                throwable ->
+                                        Log.d(TAG, "load data  error: " + throwable.getMessage())
+                        ));
     }
 
     private void downloadImages(List<ItemImage> itemImages) {
@@ -150,26 +117,25 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
             if (item.getLoadStatus() != STATUS_DOWNLOAD_OK) {
                 waitForDownload = true;
                 item.setUrl(itemImages.get(i++).getUrl());
-                downloadItemImage(item);
+                view.setItemImage(item);
             }
         }
         view.setViewsEnabled(!waitForDownload);
     }
 
-    private void downloadItemImage(CollageItem collageItem) {
-        ImageView imageView = view.getItemPlaceholder(collageItem.getViewId());
-        if (imageView != null) {
-            imageView.setTag(collageItem.getUrl());
-            downloadImage.downloadImage(imageView, collageItem);
-        } else {
-            Log.d(TAG, "downloadImages: imageSwitcher = null");
-        }
-    }
+//    private void downloadItemImage(CollageItem collageItem) {
+//        ImageView imageView = view.getItemPlaceholder(collageItem.getViewId());
+//        if (imageView != null) {
+//            imageView.setTag(collageItem.getUrl());
+//            downloadImage.downloadImage(imageView, collageItem);
+//        } else {
+//            Log.d(TAG, "downloadImages: imageSwitcher = null");
+//        }
+//    }
 
 
     private void progressCheck(int _next) {
         boolean waitForDownload = false;
-        //ArrayList<CollageItem> collageItemList = view.getItemList();
         for (CollageItem item : collageItemList) {
             if (item.getLoadStatus() == STATUS_WAIT_DOWNLOAD) {
                 waitForDownload = true;

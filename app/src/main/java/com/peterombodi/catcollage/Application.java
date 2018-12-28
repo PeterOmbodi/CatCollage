@@ -22,15 +22,16 @@ public class Application extends android.app.Application {
     @Bean
     ObjectGraph objectGraph;
 
-    private static Context instance;
+    //private static Context instance;
 
     @AfterInject
     void init() {
-        instance = getApplicationContext();
+
+        //instance = getApplicationContext();
     }
 
-    public static Context getContext() {
-        return instance;
-    }
+//    public static Context getContext() {
+//        return instance;
+//    }
 
 }

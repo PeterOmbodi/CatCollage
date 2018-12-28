@@ -10,7 +10,7 @@ import retrofit2.http.Query;
  * Created by Admin on 06.01.2017.
  */
 
-public interface ICatApiRest {
+public interface ICatService {
 
     @GET("/api/images/get")
     Observable<CatApiResponse> getCats(@Query("format") String _format,

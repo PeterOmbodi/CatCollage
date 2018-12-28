@@ -1,7 +1,5 @@
 package com.peterombodi.catcollage.presentation.custom_view.collage;
 
-import android.widget.ImageView;
-
 import com.peterombodi.catcollage.database.model.CollageItem;
 
 import java.util.ArrayList;

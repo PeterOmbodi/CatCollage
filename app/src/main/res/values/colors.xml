@@ -9,4 +9,6 @@
     <color name="colorSecondaryDark">#707070</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorWhite">#ffffff</color>
+
+    <color name="ic_launcher_background">#E3FF1E</color>
 </resources>

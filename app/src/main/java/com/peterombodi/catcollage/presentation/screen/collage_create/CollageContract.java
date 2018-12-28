@@ -1,13 +1,15 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
-import android.widget.ImageView;
-
+import com.peterombodi.catcollage.data.model.CatApiResponse;
 import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.IBaseModel;
 import com.peterombodi.catcollage.presentation.base.IBasePresenter;
 import com.peterombodi.catcollage.presentation.base.IBaseView;
 
 import java.util.ArrayList;
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * Created by Admin on 24.01.2017.
@@ -17,29 +19,31 @@ public interface CollageContract {
 
     interface CollagePresenter extends IBasePresenter {
 
-        void registerFragment(CollageContract.CreateCollageView view, CollageContract.CollageModel model);
+        void registerFragment(CollageContract.CreateCollageView view,
+                              CollageContract.CollageModel model,
+                              PublishSubject<Integer> downloadingProgress);
+
         void setCollageDensity(int density);
-        void setCollage(ArrayList<CollageItem> collageItems);
+        void setCollageItems(ArrayList<CollageItem> collageItems);
+        void restoreCollage();
 
         void loadData(int count);
         void downloadingSubscribe();
         boolean disposeDownloading();
 
         void saveImages();
-        void restoreCollage();
-
     }
 
     interface CreateCollageView extends IBaseView<CollagePresenter> {
+
         void setViewsEnabled(boolean enabled);
         void buildCollage(int density);
 
         void setCollageView(ArrayList<CollageItem> collageItems);
-
-        ImageView getItemPlaceholder(int viewId);
+        void setItemImage(CollageItem collageItem);
     }
 
     interface CollageModel extends IBaseModel {
-
+        Observable<CatApiResponse> getCats(int count);
     }
 }

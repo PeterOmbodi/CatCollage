@@ -6,7 +6,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
 import com.peterombodi.catcollage.R;
-import com.peterombodi.catcollage.presentation.screen.collage_create.CollageFragment;
 import com.peterombodi.catcollage.presentation.screen.collage_create.CollageFragment_;
 
 import org.androidannotations.annotations.EActivity;

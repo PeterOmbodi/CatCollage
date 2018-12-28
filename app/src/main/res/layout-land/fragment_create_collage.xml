@@ -37,7 +37,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_margin="@dimen/cv_horizontal_margin">
+                android:layout_margin="@dimen/cv_horizontal_margin"
+                app:imageBorderWidth="7">
 
             </com.peterombodi.catcollage.presentation.custom_view.collage.CollageView>
 
@@ -107,7 +108,7 @@
                     android:paddingTop="@dimen/padding_default"
                     android:paddingEnd="@dimen/padding_large"
                     android:paddingBottom="@dimen/padding_default"
-                    android:progress="1" />
+                    android:progress="2" />
 
                 <TextView
                     android:layout_width="wrap_content"

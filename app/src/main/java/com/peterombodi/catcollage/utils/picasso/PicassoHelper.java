@@ -1,4 +1,4 @@
-package com.peterombodi.catcollage.data.api;
+package com.peterombodi.catcollage.utils.picasso;
 
 import android.graphics.Bitmap;
 import android.util.Log;
@@ -10,6 +10,9 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
+import org.androidannotations.annotations.AfterInject;
+import org.androidannotations.annotations.EBean;
+
 import io.reactivex.subjects.PublishSubject;
 
 import static com.peterombodi.catcollage.constants.Constants.STATUS_DOWNLOAD_ERROR;
@@ -17,47 +20,47 @@ import static com.peterombodi.catcollage.constants.Constants.STATUS_DOWNLOAD_OK;
 import static com.peterombodi.catcollage.constants.Constants.STATUS_WAIT_DOWNLOAD;
 
 /**
- * Created by Admin on 25.01.2017.
+ * @author Peter Ombodi (Created on 26.12.2018).
+ * Email:  p.ombodi@gmail.com.com
  */
+@EBean(scope = EBean.Scope.Singleton)
+public class PicassoHelper implements DownloadImage{
 
-public class DownloadImage implements IDownloadImage {
+    private PublishSubject<Integer> downloadingProgress;
 
-    private static final String TAG = "DownloadImage";
-    private PublishSubject<Integer> subjectLoadImage;
-
-    public DownloadImage() {
-        this.subjectLoadImage = getPublishSubject();
+    @AfterInject
+    void init(){
+        downloadingProgress = PublishSubject.create();
     }
 
     @Override
-    public PublishSubject<Integer> getPublishSubject() {
-        if (subjectLoadImage == null) subjectLoadImage = PublishSubject.create();
-        return subjectLoadImage;
+    public PublishSubject<Integer> getDownloadingProgress() {
+        return downloadingProgress;
+
     }
 
     @Override
-    public void downloadImage(ImageView _view, CollageItem _item) {
-        _item.setLoadStatus(STATUS_WAIT_DOWNLOAD);
+    public void downloadImage(ImageView view, CollageItem collageItem) {
+        collageItem.setLoadStatus(STATUS_WAIT_DOWNLOAD);
         Picasso.get()
-                .load(_item.getUrl())
+                .load(collageItem.getUrl())
                 .transform(new CropSquareTransformation())
                 .placeholder(R.drawable.ic_download)
                 .error(R.drawable.ic_warning)
-                .into(_view, new Callback() {
+                .into(view, new Callback() {
                     @Override
                     public void onSuccess() {
-                        if (_item.getLoadStatus() != STATUS_DOWNLOAD_OK) {
-                            _item.setLoadStatus(STATUS_DOWNLOAD_OK);
-                            subjectLoadImage.onNext(-1);
+                        if (collageItem.getLoadStatus() != STATUS_DOWNLOAD_OK) {
+                            collageItem.setLoadStatus(STATUS_DOWNLOAD_OK);
+                            downloadingProgress.onNext(-1);
                         }
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        if (_item.getLoadStatus() != STATUS_DOWNLOAD_ERROR) {
-                            Log.d(TAG, "downloadImage: Exception "+e.getMessage());
-                            _item.setLoadStatus(STATUS_DOWNLOAD_ERROR);
-                            subjectLoadImage.onNext(0);
+                        if (collageItem.getLoadStatus() != STATUS_DOWNLOAD_ERROR) {
+                            collageItem.setLoadStatus(STATUS_DOWNLOAD_ERROR);
+                            downloadingProgress.onNext(0);
                         }
                     }
                 });

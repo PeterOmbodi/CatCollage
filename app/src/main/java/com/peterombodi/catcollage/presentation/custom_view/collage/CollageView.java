@@ -2,6 +2,7 @@ package com.peterombodi.catcollage.presentation.custom_view.collage;
 
 import android.content.ClipData;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
@@ -25,6 +26,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -59,13 +61,14 @@ public class CollageView extends ConstraintLayout {
 
     private static final String TAG = "CollageView";
     private static final int maxDensity = 11;
+    private static final int densitySetBigImages[] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6};
+    private static final int densitySetMiddleImages[] = {0, 1, 3, 5, 7, 9, 8, 6, 4, 5, 6};
+    private static final int imagePlaceHolder = R.drawable.ic_cat_2;
     private static final int SMALL_SIZE = 1;
     private static final int MIDDLE_SIZE = 2;
     private static final int BIG_SIZE = 3;
     private static final String TAG_SUPER_STATE = "TAG_SUPER_STATE";
     private static final String TAG_DRAG_ENABLED = "TAG_DRAG_ENABLED";
-    private static final int densitySetBigImages[] = new int[]{0, 0, 0, 0, 1, 2, 3, 4, 5, 6};
-    private static final int densitySetMiddleImages[] = new int[]{1, 3, 5, 7, 9, 8, 6, 4, 5, 6};
 
     private Context context;
     private ConstraintLayout constraintLayout;
@@ -75,8 +78,9 @@ public class CollageView extends ConstraintLayout {
     private PublishSubject<Integer> subjectSetCollage;
     private ICollageView callback;
 
-    private float gridLineWidthRelative;
+    private float gridLineWidthPercent;
     private int gridLineWidth;
+    private boolean initGrid;
     private boolean mInView = false;
     private BitmapDrawable targetDrawable;
     private int targetViewId;
@@ -96,23 +100,23 @@ public class CollageView extends ConstraintLayout {
 
     public CollageView(Context context) {
         super(context);
-        init(context);
+        init(context, null);
     }
 
     public CollageView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init(context, attrs);
     }
 
     public CollageView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init(context, attrs);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public CollageView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init(context, attrs);
     }
 
     public void setCallback(ICollageView callback) {
@@ -155,27 +159,24 @@ public class CollageView extends ConstraintLayout {
         return maxDensity;
     }
 
-//    @Override
-//    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-//        super.onSizeChanged(w, h, oldw, oldh);
-//        if (collageViewSize != 0) {
-//            ViewGroup.LayoutParams params = constraintLayout.getLayoutParams();
-//            params.height = collageViewSize;
-//            params.width = collageViewSize;
-//            constraintLayout.setVisibility(VISIBLE);
-//            constraintLayout.setLayoutParams(params);
-//            requestLayout();
-//            Log.d(TAG, "onSizeChanged: " + collageViewSize);
-//        }
-//    }
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (initGrid) {
+            gridLineWidthPercent = gridLineWidth * (1f / this.getWidth());
+            initGuidelines();
+            //requestLayout();
+        }
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         final int widthSize = reconcileSize(100, widthMeasureSpec);
         final int heightSize = reconcileSize(100, heightMeasureSpec);
         final int collageViewSize = ((heightSize > widthSize) ? widthSize : heightSize);
-        gridLineWidth = (int) (collageViewSize * gridLineWidthRelative);
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        gridLineWidthPercent = gridLineWidth * (1f / collageViewSize);
+        Log.d(TAG, "onMeasure: " + gridLineWidthPercent + " / " + collageViewSize);
     }
 
     @Override
@@ -184,11 +185,23 @@ public class CollageView extends ConstraintLayout {
         compositeDisposable.dispose();
     }
 
-    private void init(Context context) {
+    private void init(Context context, AttributeSet attrs) {
         this.context = context;
         constraintLayout = this;
-        gridLineWidthRelative = 0.01f;
-        gridLineWidth = 4;
+        //gridLineWidthRelative = 0.01f;
+        if (attrs != null) {
+            TypedArray a = context.getTheme().obtainStyledAttributes(
+                    attrs,
+                    R.styleable.CollageView,
+                    0, 0
+            );
+            try {
+                //gridLineWidthRelative = a.getInt(R.styleable.CollageView_imageBorderWidth, 1) * 0.01f;
+                gridLineWidth = a.getInt(R.styleable.CollageView_imageBorderWidth, 1);
+            } finally {
+                a.recycle();
+            }
+        }
         if (this.isInEditMode())
             setAllViews(generateCollageList(10), false);
         else {
@@ -223,9 +236,9 @@ public class CollageView extends ConstraintLayout {
 
         ArrayList<CollageItem> collageItems = new ArrayList<>();
         if (density < 11) {
-            for (int i = 1; i <= densitySetBigImages[density - 1]; i++)
+            for (int i = 1; i <= densitySetBigImages[density]; i++)
                 addItem(collageItems, BIG_SIZE, enabledPoints);
-            for (int i = 1; i <= densitySetMiddleImages[density - 1]; i++)
+            for (int i = 1; i <= densitySetMiddleImages[density]; i++)
                 addItem(collageItems, MIDDLE_SIZE, enabledPoints);
 
             while (enabledPoints.get(0).size() > 0) {
@@ -237,7 +250,7 @@ public class CollageView extends ConstraintLayout {
                     Point point = new Point(x * 3, y * 3);
                     CollageItem collageItem = new CollageItem();
                     collageItem.setParams(point.x, point.y, BIG_SIZE, -1);
-                    collageItem.setDrawable(ContextCompat.getDrawable(context, R.drawable.ic_cat_2));
+                    collageItem.setDrawable(ContextCompat.getDrawable(context, imagePlaceHolder));
                     collageItems.add(collageItem);
                 }
             }
@@ -247,14 +260,15 @@ public class CollageView extends ConstraintLayout {
 
     private void setAllViews(ArrayList<CollageItem> collageItems, boolean rebuild) {
         addGuidelines();
+//        decreaseGuidelines(newCollageItems);
         if (rebuild && collageItemList != null) {
             decreaseGuidelines(collageItems);
         } else {
             collageItemList = collageItems;
+            initGuidelines();
             for (CollageItem item : collageItems) {
                 setView(item);
             }
-            increaseGuidelines(collageItemList);
         }
         if (callback != null)
             callback.onBuildCollage(collageItems);
@@ -278,7 +292,7 @@ public class CollageView extends ConstraintLayout {
         guideLine.setId(getNewId());
         constraintLayout.addView(guideLine);
         constraintSet.create(guideLine.getId(), orientation);
-        constraintSet.setGuidelinePercent(guideLine.getId(), gridLineWidthRelative);
+        constraintSet.setGuidelinePercent(guideLine.getId(), gridLineWidthPercent);
         guidelines[orientation][i] = guideLine.getId();
     }
 
@@ -303,8 +317,8 @@ public class CollageView extends ConstraintLayout {
         TransitionManager.beginDelayedTransition(constraintLayout, set);
 
         for (int i = 0; i < 10; i++) {
-            constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], 0.25f + i * gridLineWidthRelative * 5);
-            constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], 0.25f + i * gridLineWidthRelative * 5);
+            constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], 0.25f + i * gridLineWidthPercent * 5);
+            constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], 0.25f + i * gridLineWidthPercent * 5);
         }
 
         if (collageItemList != null)
@@ -333,7 +347,22 @@ public class CollageView extends ConstraintLayout {
         TransitionManager.beginDelayedTransition(constraintLayout, set1);
         constraintLayout.setVisibility(VISIBLE);
         for (int i = 0; i < 10; i++) {
-            float percent = ((1f - gridLineWidthRelative) / 9f) * i + gridLineWidthRelative;
+            float percent = ((1f - gridLineWidthPercent) / 9f) * i + gridLineWidthPercent;
+            constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], percent);
+            constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], percent);
+        }
+        constraintLayout.setAlpha(1f);
+        constraintSet.applyTo(constraintLayout);
+    }
+
+    private void initGuidelines() {
+        Log.d(TAG, "initGuidelines: " + gridLineWidthPercent + " / " + this.getWidth());
+        initGrid = (this.getWidth()==0);
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(constraintLayout);
+        constraintLayout.setVisibility(VISIBLE);
+        for (int i = 0; i < 10; i++) {
+            float percent = ((1f - gridLineWidthPercent) / 9f) * i + gridLineWidthPercent;
             constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], percent);
             constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], percent);
         }
@@ -466,17 +495,16 @@ public class CollageView extends ConstraintLayout {
 
     private class DecreaseTransitionListener implements Transition.TransitionListener {
 
-        private ArrayList<CollageItem> collageItems;
+        private ArrayList<CollageItem> newCollageItems;
         private ConstraintSet constraintSet;
 
         DecreaseTransitionListener(ArrayList<CollageItem> collageItems, ConstraintSet constraintSet) {
-            this.collageItems = collageItems;
+            this.newCollageItems = collageItems;
             this.constraintSet = constraintSet;
         }
 
         @Override
         public void onTransitionStart(@NonNull Transition transition) {
-
         }
 
         @Override
@@ -487,38 +515,16 @@ public class CollageView extends ConstraintLayout {
             disposableTransition = Observable.just(createNewCollage())
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(this::moveGuidelines);
+                    .subscribe(CollageView.this::increaseGuidelines);
         }
 
         private ArrayList<CollageItem> createNewCollage() {
             for (CollageItem item : collageItemList)
                 constraintLayout.removeView(findViewById(item.getViewId()));
-            collageItemList = collageItems;
-            for (CollageItem item : collageItems)
+            collageItemList = newCollageItems;
+            for (CollageItem item : newCollageItems)
                 setView(item);
-            return collageItems;
-        }
-
-        private void moveGuidelines(ArrayList<CollageItem> collageItems) {
-            constraintSet = new ConstraintSet();
-            constraintSet.clone(constraintLayout);
-            TransitionSet set = new TransitionSet();
-            set.addTransition(new Fade());
-            set.addTransition(new ChangeBounds());
-            set.setOrdering(TransitionSet.ORDERING_TOGETHER);
-            set.addListener(new IncreaseTransitionListener(collageItems));
-            set.setDuration(100);
-            set.setInterpolator(new LinearOutSlowInInterpolator());
-
-            TransitionManager.beginDelayedTransition(constraintLayout, set);
-            constraintLayout.setVisibility(VISIBLE);
-            for (int i = 0; i < 10; i++) {
-                float percent = ((1f - gridLineWidthRelative) / 9f) * i + gridLineWidthRelative;
-                constraintSet.setGuidelinePercent(guidelines[VERTICAL][i], percent);
-                constraintSet.setGuidelinePercent(guidelines[HORIZONTAL][i], percent);
-            }
-            constraintLayout.setAlpha(1f);
-            constraintSet.applyTo(constraintLayout);
+            return newCollageItems;
         }
 
         @Override
