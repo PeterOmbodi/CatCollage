@@ -36,7 +36,7 @@ def androidAnnotationVersion = '4.3.1'
 def rxJavaVersion = '2.2.4'
 def rxRxAndroidVersion = '2.1.0'
 def rxBindingVersion = '2.0.0'
-def rxPermissionsVersion = '0.9.5'
+def rxPermissionsVersion = '0.10.2'
 def retrofitVersion = '2.3.0'
 def picassoVersion = '2.5.2'
 def cropVersion = '1.0.1@aar'
@@ -55,12 +55,14 @@ dependencies {
     }
 
     implementation "com.android.support:design:${androidSupportVersion}"
-    implementation 'com.android.support.constraint:constraint-layout:2.0.0-alpha2'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.0-alpha3'
 
     /*Reactive*/
     implementation "io.reactivex.rxjava2:rxandroid:${rxRxAndroidVersion}"
     implementation "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
-    
+    implementation "com.jakewharton.rxbinding2:rxbinding:${rxBindingVersion}"
+    implementation "com.github.tbruyelle:rxpermissions:${rxPermissionsVersion}"
+
     /*Utilities*/
     implementation "com.squareup.picasso:picasso:2.71828"
     implementation "com.squareup.retrofit2:retrofit:2.4.0"
@@ -75,6 +77,4 @@ dependencies {
     implementation "android.arch.persistence.room:compiler:${roomVersion}"
     implementation "android.arch.persistence.room:rxjava2:${roomVersion}"
     annotationProcessor "android.arch.persistence.room:compiler:${roomVersion}"
-
-
 }

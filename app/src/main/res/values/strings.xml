@@ -7,6 +7,13 @@
     <string name="items_size">Items size</string>
     <string name="border_color">Border color</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="share_title">Share collage</string>
+    <string name="msg_no_app_share">No found apps for share</string>
+    <string name="msg_storage_write_error">Writing error for external storage</string>
+    <string name="permission_grant">Grant</string>
+    <string name="permission_settings">SETTINGS</string>
+    <string name="msg_location_permission_on_tips">Open Permissions and grant the permission</string>
+    <string name="msg_permission_rationale">This will allow you to store and share your collage.</string>
+    <string name="msg_store_permission_not_granted">Permission for store files to external storage not granted</string>
+
 </resources>

@@ -3,6 +3,8 @@ package com.peterombodi.catcollage.presentation.custom_view.collage;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
@@ -23,10 +25,8 @@ import android.support.transition.TransitionSet;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -59,7 +59,7 @@ import static android.support.constraint.ConstraintSet.VERTICAL;
 
 public class CollageView extends ConstraintLayout {
 
-    private static final String TAG = "CollageView";
+    //private static final String TAG = "CollageView";
     private static final int maxDensity = 11;
     private static final int densitySetBigImages[] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6};
     private static final int densitySetMiddleImages[] = {0, 1, 3, 5, 7, 9, 8, 6, 4, 5, 6};
@@ -176,7 +176,6 @@ public class CollageView extends ConstraintLayout {
         final int heightSize = reconcileSize(100, heightMeasureSpec);
         final int collageViewSize = ((heightSize > widthSize) ? widthSize : heightSize);
         gridLineWidthPercent = gridLineWidth * (1f / collageViewSize);
-        Log.d(TAG, "onMeasure: " + gridLineWidthPercent + " / " + collageViewSize);
     }
 
     @Override
@@ -203,7 +202,7 @@ public class CollageView extends ConstraintLayout {
             }
         }
         if (this.isInEditMode())
-            setAllViews(generateCollageList(10), false);
+            setAllViews(generateCollageList(8), false);
         else {
             // animation drag on view
             dragIn = new AlphaAnimation(0, 1);
@@ -219,7 +218,6 @@ public class CollageView extends ConstraintLayout {
         subjectSetCollage = PublishSubject.create();
         compositeDisposable.add(
                 subjectSetCollage
-                        .debounce(200, TimeUnit.MILLISECONDS)
                         .map(this::generateCollageList)
                         .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -302,7 +300,7 @@ public class CollageView extends ConstraintLayout {
 
         TransitionSet set = new TransitionSet();
         Fade fade = new Fade();
-//		fade.setDuration(500);
+		fade.setDuration(500);
         fade.setInterpolator(new FadeInterpolator());
         set.addTransition(fade);
 
@@ -312,7 +310,7 @@ public class CollageView extends ConstraintLayout {
 
         set.setOrdering(TransitionSet.ORDERING_TOGETHER);
         set.addListener(new DecreaseTransitionListener(collageItems, constraintSet));
-        set.setDuration(200);
+        set.setDuration(400);
         set.setInterpolator(new LinearOutSlowInInterpolator());
         TransitionManager.beginDelayedTransition(constraintLayout, set);
 
@@ -333,14 +331,14 @@ public class CollageView extends ConstraintLayout {
         TransitionSet set1 = new TransitionSet();
 
         Fade fade = new Fade();
-        fade.setDuration(100);
+        fade.setDuration(500);
         set1.addTransition(fade);
 
         set1.addTransition(new ChangeBounds());
 
         set1.setOrdering(TransitionSet.ORDERING_TOGETHER);
         set1.addListener(new IncreaseTransitionListener(collageItems));
-        set1.setDuration(100);
+        set1.setDuration(400);
 
         set1.setInterpolator(new AccelerateInterpolator());
 
@@ -356,7 +354,6 @@ public class CollageView extends ConstraintLayout {
     }
 
     private void initGuidelines() {
-        Log.d(TAG, "initGuidelines: " + gridLineWidthPercent + " / " + this.getWidth());
         initGrid = (this.getWidth()==0);
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(constraintLayout);
@@ -630,13 +627,11 @@ public class CollageView extends ConstraintLayout {
                         if (item.getViewId() == targetViewId) {
                             // TODO: 18.01.2017 URL!!!!!!!!!!
                             targetView.setImageDrawable(sourceDrawable);
-                            Log.d(TAG, "onDrag: targetViewId - " + item.getUrl() + " / " + sourceUrl);
                             item.setUrl(sourceUrl);
                             //item.setBitmapDrawable((BitmapDrawable) sourceDrawable);
                         }
                         if (item.getViewId() == sourceViewId) {
                             sourceView.setImageDrawable(targetDrawable);
-                            Log.d(TAG, "onDrag: sourceViewId - " + item.getUrl() + " / " + targetUrl);
                             item.setUrl(targetUrl);
                             //item.setBitmapDrawable((BitmapDrawable) targetDrawable);
                         }
@@ -718,5 +713,12 @@ public class CollageView extends ConstraintLayout {
             default:
                 return contentSize;
         }
+    }
+
+    public Bitmap getBitmap() {
+        Bitmap bitmap = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        this.draw(canvas);
+        return bitmap;
     }
 }

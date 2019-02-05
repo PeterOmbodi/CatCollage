@@ -1,0 +1,8 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path
+        name="collage"
+        path="docs/" />
+    <root-path
+        name="root"
+        path="." />
+</paths>

@@ -1,11 +1,14 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
+import android.graphics.Bitmap;
+
 import com.peterombodi.catcollage.data.model.CatApiResponse;
 import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.IBaseModel;
 import com.peterombodi.catcollage.presentation.base.IBasePresenter;
 import com.peterombodi.catcollage.presentation.base.IBaseView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
@@ -32,15 +35,17 @@ public interface CollageContract {
         boolean disposeDownloading();
 
         void saveImages();
+        void createCollageImage(Bitmap bitmap);
     }
 
     interface CreateCollageView extends IBaseView<CollagePresenter> {
-
+        void showProgress(boolean show);
         void setViewsEnabled(boolean enabled);
         void buildCollage(int density);
 
         void setCollageView(ArrayList<CollageItem> collageItems);
         void setItemImage(CollageItem collageItem);
+        void shareImage(File file);
     }
 
     interface CollageModel extends IBaseModel {

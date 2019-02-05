@@ -1,6 +1,8 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
-import android.content.res.TypedArray;
+import android.Manifest;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,9 +13,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -22,14 +24,18 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
+import com.jakewharton.rxbinding2.widget.RxSeekBar;
 import com.peterombodi.catcollage.ObjectGraph;
 import com.peterombodi.catcollage.R;
 import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.MVPFragment;
 import com.peterombodi.catcollage.presentation.custom_view.collage.CollageView;
 import com.peterombodi.catcollage.presentation.custom_view.collage.ICollageView;
+import com.peterombodi.catcollage.presentation.screen.main.MainActivity;
 import com.peterombodi.catcollage.utils.picasso.PicassoHelper;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
@@ -39,9 +45,17 @@ import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.annotations.OptionsMenuItem;
 import org.androidannotations.annotations.ViewById;
+import org.reactivestreams.Subscription;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+
+import static android.support.v4.content.FileProvider.getUriForFile;
 import static com.peterombodi.catcollage.utils.Helper.getProgressColor;
 
 
@@ -94,7 +108,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     protected int colorPrimaryDark;
 
     private ViewTreeObserver.OnGlobalLayoutListener listener;
-
+    private Disposable seekBarSubscription;
 
     @AfterInject
     @Override
@@ -113,11 +127,11 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
         sbBackColor.setOnSeekBarChangeListener(seekBarChangeListener);
         sbBackColor.setMax(COLOR_SEEK_BAR_MAX);
         sbItemsSize.setMax(collageView.getMaxDensity());
-        sbItemsSize.setOnSeekBarChangeListener(seekBarChangeListener);
+        //sbItemsSize.setOnSeekBarChangeListener(seekBarChangeListener);
         sbItemsSize.setProgressDrawable(getResources().getDrawable(R.drawable.bg_progress_bar));
         listener = () -> {
-            setInitParams();
             sbItemsSize.getViewTreeObserver().removeOnGlobalLayoutListener(listener);
+            setInitParams();
         };
         sbItemsSize.getViewTreeObserver().addOnGlobalLayoutListener(listener);
         if (toolbar != null) {
@@ -126,6 +140,13 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
         }
         collageView.setCallback(this);
         presenter.subscribe();
+        seekBarSubscription = RxSeekBar.userChanges(sbItemsSize)
+                .debounce(300, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(value -> {
+                    //if (sbItemsSize.getProgress() != value)
+                        presenter.setCollageDensity(value);
+                });
     }
 
     @OptionsItem(R.id.actionDownload)
@@ -136,6 +157,19 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @OptionsItem(R.id.actionSave)
     void saveCollage() {
         presenter.saveImages();
+    }
+
+    @OptionsItem(R.id.actionShare)
+    void shareCollage() {
+        RxPermissions rxPermissions = ((MainActivity) getActivity()).getRxPermissions();
+        presenter.getCompositeSubscriptions().add(
+                (rxPermissions.requestEach(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        .subscribe(permission -> {
+                            if (permission.granted)
+                                presenter.createCollageImage(collageView.getBitmap());
+                            else
+                                ((MainActivity) getActivity()).onPermissionChecked(permission);
+                        })));
     }
 
     private void setInitParams() {
@@ -179,7 +213,7 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     switch (seekBar.getId()) {
                         case R.id.sb_items_size:
-                            if (fromUser) presenter.setCollageDensity(progress);
+                            //if (fromUser) presenter.setCollageDensity(progress);
                             break;
                         case R.id.sb_color:
                             int color = getProgressColor(progress);
@@ -202,14 +236,23 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
             };
 
     @Override
+    public void showProgress(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
     public void setViewsEnabled(boolean enabled) {
-        progressBar.setVisibility(enabled ? View.GONE : View.VISIBLE);
-        collageView.setDragEnabled(enabled);
-        sbItemsSize.setEnabled(enabled);
-        setMenuItem(menuDownload, enabled);
-        setMenuItem(menuSave, enabled);
-        setMenuItem(menuOpen, enabled);
-        setMenuItem(menuShare, enabled);
+        if (progressBar != null) {
+            progressBar.setVisibility(enabled ? View.GONE : View.VISIBLE);
+            collageView.setDragEnabled(enabled);
+            sbItemsSize.setEnabled(enabled);
+            setMenuItem(menuDownload, enabled);
+            // TODO: 04.02.2019 functionality not implemented
+            setMenuItem(menuSave, false);
+            setMenuItem(menuOpen, false);
+
+            setMenuItem(menuShare, enabled);
+        }
     }
 
     @Override
@@ -243,8 +286,10 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        presenter.setCollageItems(collageView.getItemList());
-        outState.putBoolean(KEY_SUBSCRIBE, presenter.disposeDownloading());
+        if (collageView != null) {
+            presenter.setCollageItems(collageView.getItemList());
+            outState.putBoolean(KEY_SUBSCRIBE, presenter.disposeDownloading());
+        }
     }
 
     @Override
@@ -259,5 +304,22 @@ public class CollageFragment extends MVPFragment<CollageContract.CollagePresente
     public void onBuildCollage(ArrayList<CollageItem> collageItems) {
         presenter.setCollageItems(collageItems);
         setViewsEnabled(true);
+    }
+
+    @Override
+    public void shareImage(File file) {
+        Uri contentUri = getUriForFile(Objects.requireNonNull(getContext()), "com.peterombodi.catcollage.fileprovider", file);
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "cats collage");
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, "");
+        intent.putExtra(Intent.EXTRA_STREAM, contentUri);
+        intent.putExtra("address", "");
+        intent.setDataAndType(contentUri, "image/*");
+        try {
+            startActivity(Intent.createChooser(intent, getResources().getString(R.string.share_title)));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getActivity(), getResources().getString(R.string.msg_no_app_share), Toast.LENGTH_SHORT).show();
+        }
     }
 }

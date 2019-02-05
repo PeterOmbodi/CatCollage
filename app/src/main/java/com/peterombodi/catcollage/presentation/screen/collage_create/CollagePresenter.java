@@ -1,15 +1,19 @@
 package com.peterombodi.catcollage.presentation.screen.collage_create;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.peterombodi.catcollage.data.model.ItemImage;
 import com.peterombodi.catcollage.database.model.CollageItem;
 import com.peterombodi.catcollage.presentation.base.BasePresenter;
+import com.peterombodi.catcollage.utils.Helper;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 import static com.peterombodi.catcollage.constants.Constants.STATUS_DOWNLOAD_OK;
@@ -87,6 +91,17 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
     }
 
     @Override
+    public void createCollageImage(Bitmap bitmap) {
+        view.setViewsEnabled(false);
+        compositeSubscriptions.add(
+                Helper.saveFile(bitmap, "catsCollage.jpg")
+                        .subscribe(file -> {
+                            view.shareImage(file);
+                            view.setViewsEnabled(true);
+                        }));
+    }
+
+    @Override
     public void restoreCollage() {
         if (collageItemList != null && collageItemList.size() > 0) {
             view.setCollageView(collageItemList);
@@ -94,7 +109,7 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
                 if (item.getUrl() != null) view.setItemImage(item);
             }
         } else {
-            view.buildCollage(2);
+           // view.buildCollage(2);
         }
     }
 
@@ -122,17 +137,6 @@ public class CollagePresenter extends BasePresenter implements CollageContract.C
         }
         view.setViewsEnabled(!waitForDownload);
     }
-
-//    private void downloadItemImage(CollageItem collageItem) {
-//        ImageView imageView = view.getItemPlaceholder(collageItem.getViewId());
-//        if (imageView != null) {
-//            imageView.setTag(collageItem.getUrl());
-//            downloadImage.downloadImage(imageView, collageItem);
-//        } else {
-//            Log.d(TAG, "downloadImages: imageSwitcher = null");
-//        }
-//    }
-
 
     private void progressCheck(int _next) {
         boolean waitForDownload = false;
